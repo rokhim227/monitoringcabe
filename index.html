@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Steam Cabe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS & PDFMake for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e11d48',
+                        'primary-hover': '#be123c',
+                        secondary: '#fda4af',
+                        dark: '#0f172a',
+                        background: '#f8fafc',
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.03)',
+                        'glow': '0 0 15px rgba(225, 29, 72, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); }
+        
+        .modern-card { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); transition: all 0.3s ease; }
+        .modern-card:hover { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06); transform: translateY(-2px); }
+        
+        .modern-input { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 1rem; transition: all 0.2s ease; width: 100%; font-size: 0.875rem; outline: none; color: #1e293b; }
+        .modern-input:focus { background-color: #ffffff; border-color: #e11d48; box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.1); }
+        .modern-input:disabled, .modern-input[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
+        
+        .modern-btn { background-color: #e11d48; color: white; border-radius: 0.75rem; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(225, 29, 72, 0.2); }
+        .modern-btn:hover { background-color: #be123c; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(225, 29, 72, 0.3); }
+
+        .icon-red { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); color: #e11d48; }
+        .icon-blue { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: #2563eb; }
+        .icon-green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #059669; }
+        .icon-orange { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); color: #f97316; }
+        
+        #sidebar { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .page-section { display: none; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .page-section.active { display: block; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        .modal-content { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Custom style for SweetAlert to ensure it stays below image modal */
+        .swal2-container {
+            z-index: 90 !important;
+        }
+    </style>
+</head>
+<body class="text-slate-700 antialiased overflow-x-hidden">
+
+    <!-- APP STATE & DATA -->
+    <script>
+        // ==========================================
+        // KONFIGURASI API BACKEND (PASTE URL DI SINI)
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3AWBW2a_dxsqWfec8DP9UhQdfVW6tvOsEjyOWT_nEyQ8t6RXiaof2V4ws3GCAhLww/exec'; 
+
+        let APP_DATA = {
+            users: [], stores: [],
+            settings: {
+                logoApp: 'https://www.dsppa.smartnusantara.com/image/cop.png',
+                copyright: '© 2026 Noodle Company. All rights reserved.',
+                kalibrasi: {
+                    gacoan: { l1: 10, l2: 20, l3: 30, l4: 40, l6: 60, l8: 80 },
+                    hompimpa: { l1: 5, l2: 15, l3: 25, l4: 35, l6: 55, l8: 75 }
+                }
+            },
+            cabeProcess: [], kalibrasi: []
+        };
+        
+        let currentUser = null; let currentPage = 1; let charts = {};
+        let editingId = null; let editingUserId = null; let editingStoreId = null; let editingKalibrasiId = null;
+
+        // FUNGSI UTAMA KOMUNIKASI FETCH API KE GOOGLE SCRIPT
+        async function callAPI(action, payload = null) {
+            try {
+                if (SCRIPT_URL === 'URL_DEPLOY_APPS_SCRIPT_ANDA_DISINI') {
+                    throw new Error("Tolong ganti SCRIPT_URL dengan link Web App Apps Script yang benar!");
+                }
+
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: action, payload: payload })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                return { success: false, message: error.message || "Gagal terhubung ke server." };
+            }
+        }
+    </script>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
+        <div class="absolute inset-0 bg-slate-900 bg-opacity-70 backdrop-blur-sm"></div>
+        <div class="glass relative z-10 p-10 rounded-3xl shadow-2xl w-full max-w-md m-4 border border-white/20">
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 bg-white rounded-2xl mx-auto mb-5 flex items-center justify-center shadow-lg p-3">
+                    <img id="loginLogo" src="" alt="Logo" class="w-full h-full object-contain filter drop-shadow-sm">
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Monitoring Cabe</h1>
+                <p class="text-slate-500 text-sm mt-1">Silakan masuk ke akun Anda</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-600 mb-1.5">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fas fa-user text-slate-400"></i></div>
+                        <input type="text" id="username" class="modern-input pl-10" placeholder="Masukkan username" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-600 mb-1.5">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fas fa-lock text-slate-400"></i></div>
+                        <input type="password" id="password" class="modern-input pl-10 pr-10" placeholder="••••••••" required>
+                        <button type="button" onclick="togglePassword('password', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition">
+                            <i id="eyeIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mb-8">
+                    <label class="flex items-center text-sm text-slate-500 cursor-pointer hover:text-slate-700 transition">
+                        <input type="checkbox" id="rememberMe" class="mr-2 rounded border-slate-300 text-primary focus:ring-primary w-4 h-4"> Simpan Info
+                    </label>
+                </div>
+                <button type="submit" class="w-full modern-btn py-2.5 text-base tracking-wide">
+                    Masuk Sekarang
+                </button>
+            </form>
+            <div id="loginError" class="mt-5 text-center bg-rose-50 text-rose-600 border border-rose-100 py-2 rounded-xl text-sm hidden font-medium">Username atau password salah!</div>
+            <div class="mt-8 text-center text-xs text-slate-400 font-medium" id="loginCopyright"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP LAYOUT -->
+    <div id="appLayout" class="hidden flex h-screen bg-background">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transform -translate-x-full md:translate-x-0 md:static md:flex md:flex-col h-full">
+            <div class="flex items-center justify-between p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 p-1.5">
+                        <img id="sidebarLogo" src="" alt="Logo" class="w-full h-full object-contain">
+                    </div>
+                    <span class="font-bold text-lg text-slate-800 tracking-tight">Cabe System</span>
+                </div>
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-primary transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 pb-2 border-b border-slate-100 bg-slate-50/50 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">User Profile</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                        <i class="fas fa-user-tie text-sm"></i>
+                    </div>
+                    <div>
+                        <p id="userInfoName" class="font-bold text-slate-800 leading-tight"></p>
+                        <p id="userInfoRole" class="text-xs font-medium text-primary mt-0.5 bg-rose-50 px-2 py-0.5 rounded-md inline-block"></p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto" id="navMenu"></nav>
+
+            <div class="p-5 border-t border-slate-100">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-rose-600 bg-rose-50 hover:bg-rose-100 font-medium rounded-xl transition-colors">
+                    <i class="fas fa-sign-out-alt"></i> <span>Keluar Sistem</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Overlay -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900 bg-opacity-40 backdrop-blur-sm z-40 hidden md:hidden"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm z-30 flex items-center justify-between p-4 px-6 sticky top-0">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="text-slate-500 hover:text-primary focus:outline-none md:hidden bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center border border-slate-100 transition">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <img id="mobileHeaderLogo" src="" alt="Logo" class="w-8 h-8 object-contain md:hidden drop-shadow-sm">
+                    <h2 id="pageTitle" class="text-2xl font-bold text-slate-800 hidden sm:block tracking-tight">Dashboard</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshData()" class="w-9 h-9 flex items-center justify-center bg-slate-50 text-slate-500 hover:text-primary hover:bg-rose-50 border border-slate-200 rounded-full transition-colors shadow-sm" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <span id="headerClock" class="text-xs sm:text-sm font-medium text-slate-600 bg-slate-100/80 border border-slate-200 px-3 sm:px-4 py-1.5 rounded-full shadow-sm flex items-center whitespace-nowrap">
+                        <i class="far fa-clock mr-1.5 text-primary"></i> <span id="clockText">00:00:00</span>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24" id="mainScrollArea">
+                
+                <!-- ================== DASHBOARD PAGE ================== -->
+                <section id="page-dashboard" class="page-section max-w-7xl mx-auto">
+                    <!-- Summaries -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-20 h-20 bg-rose-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 rounded-2xl icon-red flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-arrow-up-right-dots"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Susut Tertinggi</h4>
+                                <p class="text-xl font-bold text-slate-800 truncate" id="dashMaxStore">-</p>
+                                <p class="text-xs font-semibold text-rose-600 mt-0.5 bg-rose-50 inline-block px-1.5 py-0.5 rounded" id="dashMaxVal">0 gr</p>
+                            </div>
+                        </div>
+                        <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-20 h-20 bg-emerald-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 rounded-2xl icon-green flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-chevron-circle-down"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Susut Terkecil</h4>
+                                <p class="text-xl font-bold text-slate-800 truncate" id="dashMinStore">-</p>
+                                <p class="text-xs font-semibold text-emerald-600 mt-0.5 bg-emerald-50 inline-block px-1.5 py-0.5 rounded" id="dashMinVal">0 gr</p>
+                            </div>
+                        </div>
+                        <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-20 h-20 bg-blue-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 rounded-2xl icon-blue flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-calendar-alt"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Total Monthly</h4>
+                                <p class="text-xl font-bold text-slate-800 truncate" id="dashTotalMonthly">0 gr</p>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">Bulan Ini</p>
+                            </div>
+                        </div>
+                        <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-20 h-20 bg-orange-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 rounded-2xl icon-orange flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-store"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Total Store</h4>
+                                <p class="text-xl font-bold text-slate-800 truncate" id="dashTotalStore">0</p>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">Store Terdaftar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="modern-card p-5 mb-8 flex flex-wrap gap-5 items-end bg-white border-l-4 border-l-primary">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"><i class="far fa-calendar-alt mr-1"></i> Dari Tanggal</label>
+                            <input type="date" id="filterStart" class="modern-input py-2 cursor-pointer" onchange="filterDashboard()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"><i class="far fa-calendar-alt mr-1"></i> Sampai Tanggal</label>
+                            <input type="date" id="filterEnd" class="modern-input py-2 cursor-pointer" onchange="filterDashboard()">
+                        </div>
+                        <div class="relative min-w-[200px] flex-1 sm:flex-none">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5"><i class="fas fa-store mr-1"></i> Pilih Store</label>
+                            <select id="filterStore" class="modern-input py-2 appearance-none font-medium cursor-pointer" onchange="filterDashboard()"><option value="All">Semua Store</option></select>
+                            <i class="fas fa-chevron-down absolute right-4 top-9 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
+                        <button onclick="filterDashboard()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2 rounded-xl text-sm font-medium transition-all shadow-sm flex items-center gap-2 mt-2 sm:mt-0"><i class="fas fa-filter"></i> Terapkan</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="modern-card p-6 flex flex-col">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-slate-800 text-lg">History Input Per Jam</h3>
+                                <select id="chartCategoryFilter" class="modern-input py-1.5 px-3 text-xs w-auto bg-slate-50 border-slate-200" onchange="filterDashboard()">
+                                    <option value="both">Before & After</option>
+                                    <option value="before">Hanya Before</option>
+                                    <option value="after">Hanya After</option>
+                                </select>
+                            </div>
+                            <div class="relative w-full h-64 min-h-[250px] flex-1"><canvas id="chartInputJam"></canvas></div>
+                        </div>
+                        <div class="modern-card p-6 flex flex-col">
+                            <div class="mb-6"><h3 class="font-bold text-slate-800 text-lg">Total Input Cabe</h3></div>
+                            <div class="relative w-full h-64 min-h-[250px] flex justify-center flex-1"><canvas id="chartTotalPie"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="modern-card p-6 flex flex-col">
+                            <div class="mb-6"><h3 class="font-bold text-slate-800 text-lg">Total Susut Per Store</h3></div>
+                            <div class="relative w-full h-64 min-h-[250px] flex-1"><canvas id="chartSusutStore"></canvas></div>
+                        </div>
+                        <div class="modern-card p-6 flex flex-col">
+                            <div class="mb-6"><h3 class="font-bold text-slate-800 text-lg">Tren Susut Mingguan</h3></div>
+                            <div class="relative w-full h-64 min-h-[250px] flex-1"><canvas id="chartSusutWeekly"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================== CABE PROCESS PAGE ================== -->
+                <section id="page-cabeprocess" class="page-section max-w-7xl mx-auto">
+                    <!-- Summaries -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-14 h-14 rounded-2xl icon-orange flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-weight-hanging"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-bold uppercase tracking-wide mb-1.5">Total Terpakai</h4>
+                                <div class="flex flex-col">
+                                    <p class="text-2xl sm:text-3xl font-bold text-slate-800 leading-none" id="sumCabeTerpakai">0 gr</p>
+                                    <p class="text-[10px] font-semibold text-orange-600 mt-2 bg-orange-50 self-start px-2 py-1 rounded-md border border-orange-100" id="sumCabeResep"><i class="fas fa-utensils mr-1"></i> 0 Resep</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-14 h-14 rounded-2xl icon-red flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1">Susut Daily</h4>
+                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutDaily">0 gr</p>
+                            </div>
+                        </div>
+                        <div class="modern-card p-5 flex flex-col relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform pointer-events-none"></div>
+                            <div class="flex items-start justify-between z-10 w-full mb-2">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl icon-blue flex items-center justify-center text-xl shadow-sm shrink-0"><i class="fas fa-calendar-week"></i></div>
+                                    <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide">Susut Weekly</h4>
+                                </div>
+                            </div>
+                            <div class="z-10 w-full pl-16">
+                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutWeekly">0 gr</p>
+                                <select id="weekFilter" onchange="renderTableCabe()" class="text-[10px] font-bold border border-slate-200 rounded-md bg-white text-primary px-1.5 py-0.5 outline-none shadow-sm cursor-pointer mt-1 relative z-20">
+                                    <option value="W1">Week 1</option><option value="W2">Week 2</option><option value="W3">Week 3</option><option value="W4">Week 4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-14 h-14 rounded-2xl icon-green flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-calendar-check"></i></div>
+                            <div class="z-10 w-full">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1">Susut Monthly</h4>
+                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutMonthly">0 gr</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Input -->
+                    <div class="modern-card mb-8 overflow-hidden" id="formCabeContainer">
+                        <div class="p-5 px-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition" onclick="toggleElement('formCabeBody', 'iconFormCabe')">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm"><i class="fas fa-edit"></i></div>
+                                <h3 class="font-bold text-slate-800" id="formTitle">Form Proses Steam Cabe</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                                <i id="iconFormCabe" class="fas fa-chevron-up text-slate-400 transition-transform"></i>
+                            </div>
+                        </div>
+                        <div class="p-6 md:p-8" id="formCabeBody">
+                            <form id="formCabe" onsubmit="submitCabeProcess(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="cb_petugas" class="modern-input font-medium" readonly></div>
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="cb_store" class="modern-input font-medium appearance-none" required></select></div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Data Batch</label>
+                                        <select id="cb_batch" class="modern-input appearance-none font-medium cursor-pointer" required>
+                                            <script>for(let i=1; i<=20; i++) document.write(`<option value="Batch ${i}">Batch ${i}</option>`);</script>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-6 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Berat Before Process (gr)</label>
+                                        <div class="relative">
+                                            <input type="number" id="cb_before" class="modern-input pr-12 font-bold text-lg" placeholder="0" oninput="calcSusut()" required>
+                                            <span class="absolute right-4 top-2 text-slate-400 font-medium">gr</span>
+                                        </div>
+                                        <label class="block text-sm font-semibold text-slate-600 mt-4 mb-2">Foto Dokumentasi Before</label>
+                                        <input type="file" id="cb_foto_before" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-primary hover:file:bg-rose-100 transition cursor-pointer">
+                                        <p class="text-[10px] text-slate-400 mt-1">*Gambar akan otomatis dikompresi.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Berat After Steam (gr)</label>
+                                        <div class="relative">
+                                            <input type="number" id="cb_after" class="modern-input pr-12 font-bold text-lg" placeholder="0" oninput="calcSusut()" required>
+                                            <span class="absolute right-4 top-2 text-slate-400 font-medium">gr</span>
+                                        </div>
+                                        <label class="block text-sm font-semibold text-slate-600 mt-4 mb-2">Foto Dokumentasi After</label>
+                                        <input type="file" id="cb_foto_after" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 transition cursor-pointer">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Total Susut Cabe</label>
+                                        <div id="cb_susut_box" class="w-full modern-input bg-slate-100 px-4 py-3.5 text-xl font-bold text-center text-slate-400 border-dashed border-2">0 gr</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Keterangan (Opsional)</label>
+                                        <textarea id="cb_ket" class="modern-input h-[62px] resize-none" placeholder="Tambahkan catatan jika ada..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="mt-8 flex justify-end gap-3">
+                                    <button type="button" id="btnCancelEdit" class="hidden modern-btn bg-slate-400 hover:bg-slate-500 px-6 py-2.5 flex items-center gap-2 shadow-none" onclick="cancelEdit()"><i class="fas fa-times"></i> Batal</button>
+                                    <button type="submit" id="btnSubmitForm" class="modern-btn px-8 py-2.5 flex items-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Simpan Data</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Data Table -->
+                    <div class="modern-card overflow-hidden">
+                        <div class="p-5 px-6 border-b border-slate-100 flex flex-col gap-4 bg-white">
+                            <div class="flex flex-wrap gap-4 justify-between items-center w-full">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm"><i class="fas fa-table"></i></div>
+                                    <h3 class="font-bold text-slate-800">Data Monitoring</h3>
+                                </div>
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <button onclick="exportExcel('tabelCabeData', 'Monitoring_Cabe')" class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1.5"><i class="fas fa-file-excel"></i> Excel</button>
+                                    <button onclick="exportPDF('tabelCabeData', 'Monitoring_Cabe')" class="bg-rose-50 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-rose-100 transition flex items-center gap-1.5"><i class="fas fa-file-pdf"></i> PDF</button>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
+                                <div class="relative flex-1 min-w-[200px]">
+                                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                                    <input type="text" id="searchCabe" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderTableCabe()">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label>
+                                    <input type="date" id="tabelFilterStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableCabe()">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label>
+                                    <input type="date" id="tabelFilterEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableCabe()">
+                                </div>
+                                <div class="relative">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label>
+                                    <select id="tabelFilterStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderTableCabe()"><option value="All">Semua Store</option></select>
+                                    <i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap" id="tabelCabeData">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Petugas</th>
+                                        <th class="px-6 py-4">Store & Batch</th>
+                                        <th class="px-6 py-4 text-center">Before <span class="text-[10px] lowercase text-slate-400">(gr)</span></th>
+                                        <th class="px-6 py-4 text-center">After <span class="text-[10px] lowercase text-slate-400">(gr)</span></th>
+                                        <th class="px-6 py-4 text-center">Susut</th>
+                                        <th class="px-6 py-4 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-slate-600" id="tabelCabeBody">
+                                    <!-- Data via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-5 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500 bg-slate-50/30">
+                            <span id="tabelCabeInfo" class="font-medium">Menampilkan 0 data</span>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 font-medium transition shadow-sm">Prev</button>
+                                <button class="px-3 py-1.5 bg-primary text-white shadow-sm rounded-lg font-medium">1</button>
+                                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 font-medium transition shadow-sm">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================== KALIBRASI PAGE ================== -->
+                <section id="page-kalibrasi" class="page-section max-w-7xl mx-auto">
+                    <!-- Form Kalibrasi -->
+                    <div class="modern-card mb-8 overflow-hidden" id="formKalContainer">
+                        <div class="p-5 px-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition" onclick="toggleElement('formKalBody', 'iconFormKal')">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm"><i class="fas fa-balance-scale"></i></div>
+                                <h3 class="font-bold text-slate-800" id="formKalTitle">Form Kalibrasi Alat</h3>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><i id="iconFormKal" class="fas fa-chevron-up text-slate-400 transition-transform"></i></div>
+                        </div>
+                        <div class="p-6 md:p-8" id="formKalBody">
+                            <form id="formKalibrasi" onsubmit="submitKalibrasi(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                                    <div><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Tgl & Jam</label><input type="datetime-local" id="kal_tgl" class="modern-input" required></div>
+                                    <div><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Petugas</label><input type="text" id="kal_petugas" class="modern-input font-medium" readonly></div>
+                                    <div><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Crew Noodle</label><input type="text" id="kal_crew" class="modern-input" placeholder="Nama crew" required></div>
+                                    <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Store</label><select id="kal_store" class="modern-input appearance-none bg-slate-50 cursor-pointer" required></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
+                                    <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Batch</label><select id="kal_batch" class="modern-input appearance-none bg-slate-50 cursor-pointer" required><script>for(let i=1; i<=20; i++) document.write(`<option value="Batch ${i}">Batch ${i}</option>`);</script></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
+                                    <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Kategori Mie</label><select id="kal_kategori" class="modern-input appearance-none cursor-pointer font-bold" onchange="updateKalibrasiStd()" required><option value="gacoan">Mie Gacoan</option><option value="hompimpa">Mie Hompimpa</option></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
+                                </div>
+                                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fas fa-crosshairs text-primary"></i> Input Hasil & Acuan Gramasi</h4>
+                                        <span class="text-xs text-slate-500 font-medium bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-info-circle text-blue-500 mr-1"></i> Isi 10 takaran per level</span>
+                                    </div>
+                                    <div class="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm pb-2">
+                                        <table class="w-full text-left min-w-[850px]" id="kalibrasiInputTable" oninput="evalKalibrasi()">
+                                            <thead class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-bold">
+                                                <tr>
+                                                    <th class="px-4 py-3 border-b border-slate-200 w-24">Level</th><th class="px-4 py-3 border-b border-slate-200 w-24 text-center">Acuan</th><th class="px-2 py-3 border-b border-slate-200 text-center" colspan="10">Takaran Gramasi (1 - 10)</th><th class="px-4 py-3 border-b border-slate-200 text-center w-32">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                                <script>
+                                                    const kalLevelsArr = ['l1', 'l2', 'l3', 'l4', 'l6', 'l8']; const kalLabels = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 6', 'Level 8']; let kalHtml = '';
+                                                    kalLevelsArr.forEach((lvl, idx) => {
+                                                        kalHtml += '<tr class="hover:bg-slate-50/50 transition-colors"><td class="px-4 py-3 font-bold text-slate-700 text-xs whitespace-nowrap">' + kalLabels[idx] + '</td><td class="px-4 py-3 font-bold text-primary text-center"><span id="std_' + lvl + '">0</span>g</td>';
+                                                        for(let i=1; i<=10; i++) { kalHtml += '<td class="px-1 py-3"><input type="number" step="0.1" class="w-full min-w-[50px] border border-slate-200 rounded-lg bg-slate-50 px-1 py-1.5 text-center text-xs font-bold text-slate-700 focus:bg-white focus:border-primary kal-input-' + lvl + '" required></td>'; }
+                                                        kalHtml += '<td class="px-4 py-3 text-center font-bold text-xs" id="status_' + lvl + '">-</td></tr>';
+                                                    }); document.write(kalHtml);
+                                                </script>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <button type="button" id="btnCancelKalibrasi" class="hidden modern-btn bg-slate-400 hover:bg-slate-500 px-6 py-2.5 flex items-center gap-2 shadow-none" onclick="cancelEditKalibrasi()"><i class="fas fa-times"></i> Batal</button>
+                                    <button type="submit" id="btnSubmitKalibrasi" class="modern-btn px-6 py-2.5 text-sm flex items-center gap-2"><i class="fas fa-save"></i> Simpan Kalibrasi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Kalibrasi Table -->
+                    <div class="modern-card overflow-hidden">
+                        <div class="p-5 px-6 border-b border-slate-100 flex flex-col gap-4 bg-white">
+                            <div class="flex flex-wrap gap-4 justify-between items-center w-full">
+                                <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm"><i class="fas fa-clipboard-list"></i></div><h3 class="font-bold text-slate-800">Data Kalibrasi</h3></div>
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <button onclick="exportExcel('tabelKalData', 'Data_Kalibrasi')" class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1.5"><i class="fas fa-file-excel"></i> Excel</button>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
+                                <div class="relative flex-1 min-w-[200px]"><i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i><input type="text" id="searchKalibrasi" placeholder="Cari petugas, crew..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderTableKalibrasi()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterKalStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableKalibrasi()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterKalEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableKalibrasi()"></div>
+                                <div class="relative"><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label><select id="tabelFilterKalStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderTableKalibrasi()"><option value="All">Semua Store</option></select><i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i></div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap" id="tabelKalData">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                                    <tr><th class="px-6 py-4">Tgl & Jam</th><th class="px-6 py-4">Petugas & Crew</th><th class="px-6 py-4">Store & Batch</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 text-center">Status Kalibrasi</th><th class="px-6 py-4 text-center">Aksi</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-slate-600" id="tabelKalBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-5 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500 bg-slate-50/30"><span id="tabelKalInfo" class="font-medium">Menampilkan 0 data</span></div>
+                    </div>
+                </section>
+
+                <!-- ================== SETTINGS PAGE ================== -->
+                <section id="page-settings" class="page-section max-w-6xl mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="flex flex-col gap-8">
+                            <div class="modern-card p-6 md:p-8">
+                                <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6 flex items-center gap-2"><div class="w-8 h-8 rounded bg-orange-50 text-orange-500 flex justify-center items-center"><i class="fas fa-store-alt"></i></div> Store Management</h3>
+                                <form id="formStore" onsubmit="saveStore(event)" class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-100 flex gap-3 items-end">
+                                    <div class="flex-1"><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nama Store Baru</label><input type="text" id="storeNameInput" class="modern-input py-2" placeholder="Contoh: Madiun 3" required></div>
+                                    <button type="submit" id="btnSaveStore" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm"><i class="fas fa-plus"></i></button>
+                                    <button type="button" id="btnCancelStore" onclick="cancelStoreEdit()" class="hidden bg-slate-400 hover:bg-slate-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm"><i class="fas fa-times"></i></button>
+                                </form>
+                                <div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="storeListRender"></div>
+                            </div>
+                            <div class="modern-card p-6 md:p-8">
+                                <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6 flex items-center gap-2"><div class="w-8 h-8 rounded bg-blue-50 text-blue-600 flex justify-center items-center"><i class="fas fa-users"></i></div> User Access</h3>
+                                <div class="space-y-3 max-h-72 overflow-y-auto mb-6 pr-2" id="userListRender"></div>
+                                <button onclick="openUserModal('add')" type="button" class="w-full border-2 border-dashed border-slate-300 text-slate-500 rounded-xl py-2.5 text-sm font-semibold hover:bg-slate-50 hover:text-primary hover:border-primary transition flex justify-center items-center gap-2"><i class="fas fa-plus"></i> Tambah User</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-8">
+                            <div class="modern-card p-6 md:p-8">
+                                <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6 flex items-center gap-2"><div class="w-8 h-8 rounded bg-rose-50 text-primary flex justify-center items-center"><i class="fas fa-sliders-h"></i></div> Acuan Gramasi</h3>
+                                <div class="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-fire text-orange-500"></i> Mie Gacoan (gr)</h4>
+                                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="number" id="set_g_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="number" id="set_g_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="number" id="set_g_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="number" id="set_g_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="number" id="set_g_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="number" id="set_g_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-pepper-hot text-primary"></i> Mie Hompimpa (gr)</h4>
+                                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="number" id="set_h_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="number" id="set_h_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="number" id="set_h_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="number" id="set_h_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="number" id="set_h_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="number" id="set_h_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end"><button id="btnSaveGramasi" type="button" onclick="saveGramasiSettings()" class="bg-slate-800 text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-slate-900 transition shadow-sm flex items-center gap-2"><i class="fas fa-save"></i> Simpan</button></div>
+                            </div>
+                            <div class="modern-card p-6 md:p-8">
+                                <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-4 mb-6 flex items-center gap-2"><div class="w-8 h-8 rounded bg-emerald-50 text-emerald-600 flex justify-center items-center"><i class="fas fa-cog"></i></div> System Settings</h3>
+                                <div class="grid grid-cols-1 gap-6 mb-6">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Preview Logo</label>
+                                        <div class="bg-white p-3 rounded-xl border border-slate-100 mb-4 inline-block shadow-sm">
+                                            <img id="previewLogoSetting" src="" alt="Preview" class="h-16 object-contain">
+                                        </div>
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">URL Logo Aplikasi</label>
+                                        <input type="text" id="set_logo" class="modern-input mb-5" oninput="document.getElementById('previewLogoSetting').src = this.value || APP_DATA.settings.logoApp">
+                                        <label class="block text-sm font-semibold text-slate-600 mb-2">Copyright Text</label>
+                                        <input type="text" id="set_copyright" class="modern-input">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t border-slate-100"><button id="btnSaveSys" type="button" onclick="saveSystemSettings()" class="modern-btn px-8 py-2.5 text-sm flex items-center gap-2"><i class="fas fa-check-circle"></i> Simpan</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="mt-10 text-center text-sm font-medium text-slate-400 pb-6" id="appCopyright"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- User Modal Form -->
+    <div id="userModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
+        <div class="absolute inset-0 modal-overlay" onclick="closeUserModal()"></div>
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md m-4 relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="userModalTitle"><i class="fas fa-user-plus text-primary"></i> Tambah User</h3><button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex justify-center items-center rounded-lg hover:bg-slate-100 transition"><i class="fas fa-times"></i></button></div>
+            <div class="p-6 overflow-y-auto">
+                <form id="formUser" onsubmit="saveUser(event)">
+                    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Nama Lengkap</label><input type="text" id="u_name" class="modern-input" required></div>
+                    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Role / Jabatan</label><select id="u_role" class="modern-input appearance-none cursor-pointer" required><option value="Admin">Admin</option><option value="Manager">Manager</option><option value="Store Manager">Store Manager</option><option value="QC">QC</option></select></div>
+                    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Asal Store</label><select id="u_store" class="modern-input appearance-none cursor-pointer" required></select></div>
+                    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Username</label><input type="text" id="u_username" class="modern-input" required></div>
+                    <div class="mb-6"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Password</label><input type="text" id="u_password" class="modern-input" required></div>
+                    <div class="flex justify-end gap-3 pt-2"><button type="button" onclick="closeUserModal()" class="px-5 py-2 text-sm font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Batal</button><button type="submit" id="btnSaveUserModal" class="modern-btn px-6 py-2 text-sm">Simpan</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Zoom Modal -->
+    <div id="imgPreviewModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/90 backdrop-blur-sm transition-opacity">
+        <button onclick="closeImgPreview()" class="absolute top-6 right-6 text-white/70 hover:text-rose-500 text-3xl transition-colors z-20"><i class="fas fa-times-circle"></i></button>
+        <div class="absolute bottom-8 flex gap-4 bg-slate-800/50 p-2 rounded-full backdrop-blur-md border border-white/10 shadow-2xl z-20">
+            <button onclick="zoomImg(0.25)" class="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition text-xl"><i class="fas fa-search-plus"></i></button>
+            <button onclick="zoomImg(-0.25)" class="w-12 h-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition text-xl"><i class="fas fa-search-minus"></i></button>
+            <div class="w-px h-8 bg-white/20 my-auto mx-1"></div>
+            <a id="downloadImgBtn" href="#" download="Dokumentasi_Cabe.jpg" class="bg-primary hover:bg-rose-600 text-white rounded-full px-6 h-12 flex items-center justify-center font-bold gap-2 transition"><i class="fas fa-download"></i> Simpan</a>
+        </div>
+        <div class="overflow-auto w-full h-full flex items-center justify-center p-4 z-10">
+            <img id="previewImgTarget" src="" class="transition-transform duration-300 ease-out transform scale-100 max-h-[85vh] max-w-[90vw] object-contain rounded shadow-2xl origin-center">
+        </div>
+    </div>
+
+    <script>
+        // --- Init & Fetch Data ---
+        document.addEventListener('DOMContentLoaded', () => {
+            callAPI('getPublicSettings').then(res => {
+                if(res.success && res.data) {
+                    APP_DATA.settings.logoApp = res.data.logoApp || APP_DATA.settings.logoApp;
+                    APP_DATA.settings.copyright = res.data.copyright || APP_DATA.settings.copyright;
+                }
+                initAppUI();
+            });
+            
+            if(localStorage.getItem('savedUser')) {
+                document.getElementById('username').value = localStorage.getItem('savedUser');
+                document.getElementById('rememberMe').checked = true;
+            }
+            setInterval(updateClock, 1000); updateClock();
+        });
+
+        function initAppUI() {
+            document.getElementById('loginLogo').src = APP_DATA.settings.logoApp;
+            document.getElementById('sidebarLogo').src = APP_DATA.settings.logoApp;
+            document.getElementById('mobileHeaderLogo').src = APP_DATA.settings.logoApp;
+            document.getElementById('appCopyright').innerText = APP_DATA.settings.copyright;
+            
+            const prevLogo = document.getElementById('previewLogoSetting');
+            if (prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
+            
+            const storeDropdowns = ['filterStore', 'tabelFilterStore', 'cb_store', 'kal_store', 'u_store', 'tabelFilterKalStore'];
+            const allStoresHtml = APP_DATA.stores.map(st => `<option value="${st.name}">${st.name}</option>`).join('');
+            storeDropdowns.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    let oldVal = el.value;
+                    if(id === 'filterStore' || id === 'tabelFilterStore' || id === 'tabelFilterKalStore') {
+                        el.innerHTML = `<option value="All">Semua Store</option>` + allStoresHtml;
+                    } else if(id === 'u_store') {
+                        el.innerHTML = `<option value="All">All Store</option>` + allStoresHtml;
+                    } else {
+                        el.innerHTML = allStoresHtml || `<option value="" disabled selected>Belum ada store</option>`;
+                    }
+                    if(oldVal && Array.from(el.options).some(o => o.value === oldVal)) el.value = oldVal;
+                }
+            });
+
+            document.getElementById('set_logo').value = APP_DATA.settings.logoApp;
+            document.getElementById('set_copyright').value = APP_DATA.settings.copyright;
+
+            ['g', 'h'].forEach(kat => {
+                ['l1','l2','l3','l4','l6','l8'].forEach(lvl => {
+                    const el = document.getElementById(`set_${kat}_${lvl}`);
+                    const key = kat === 'g' ? 'gacoan' : 'hompimpa';
+                    if(el && APP_DATA.settings.kalibrasi[key] && APP_DATA.settings.kalibrasi[key][lvl]) {
+                        el.value = APP_DATA.settings.kalibrasi[key][lvl];
+                    }
+                });
+            });
+        }
+
+        function refreshData(silent = false) {
+            if(!silent) Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            
+            callAPI('getAppData').then(res => {
+                if (res.success && res.data && res.data.users) {
+                    APP_DATA = res.data; initAppUI(); reloadActiveViews();
+                    if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
+                } else {
+                    if(!silent) Swal.fire('Error', res.message || 'Gagal memuat data dari server.', 'error');
+                }
+            });
+        }
+
+        function reloadActiveViews() {
+            if(document.getElementById('page-dashboard').classList.contains('active')) filterDashboard();
+            if(document.getElementById('page-cabeprocess').classList.contains('active')) renderTableCabe();
+            if(document.getElementById('page-kalibrasi').classList.contains('active')) renderTableKalibrasi();
+            if(document.getElementById('page-settings').classList.contains('active')) renderSettings();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockText').innerText = now.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ' - ' + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        }
+
+        function togglePassword(i, ico) {
+            const el = document.getElementById(i); const c = document.getElementById(ico);
+            if(el.type === "password") { el.type = "text"; c.classList.replace('fa-eye', 'fa-eye-slash'); } 
+            else { el.type = "password"; c.classList.replace('fa-eye-slash', 'fa-eye'); }
+        }
+        function toggleElement(t, ic) {
+            const e = document.getElementById(t); const c = document.getElementById(ic);
+            if(e.style.display === 'none') { e.style.display = 'block'; c.style.transform = 'rotate(0deg)'; } 
+            else { e.style.display = 'none'; c.style.transform = 'rotate(180deg)'; }
+        }
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar'); const o = document.getElementById('sidebarOverlay');
+            if(s.classList.contains('-translate-x-full')) { s.classList.remove('-translate-x-full'); o.classList.remove('hidden'); } 
+            else { s.classList.add('-translate-x-full'); o.classList.add('hidden'); }
+        }
+
+        // --- Auth ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value; const p = document.getElementById('password').value; const rem = document.getElementById('rememberMe').checked;
+            const btn = document.querySelector('#loginForm button[type="submit"]');
+            const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>'; btn.disabled = true;
+
+            callAPI('loginAndFetchData', { username: u, password: p }).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    APP_DATA = res.data; initAppUI(); processLoginSuccess(res.user, u, rem); 
+                } else { 
+                    document.getElementById('loginError').innerText = res.message || 'Error server'; 
+                    document.getElementById('loginError').classList.remove('hidden'); 
+                }
+            });
+        }
+        
+        function processLoginSuccess(user, u, rem) {
+            currentUser = user;
+            document.getElementById('loginError').classList.add('hidden'); document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appLayout').classList.remove('hidden');
+            if(rem) localStorage.setItem('savedUser', u); else localStorage.removeItem('savedUser');
+            document.getElementById('userInfoName').innerText = user.name; document.getElementById('userInfoRole').innerText = user.role;
+            document.getElementById('cb_petugas').value = user.name; document.getElementById('kal_petugas').value = user.name;
+            if(user.store !== 'All') { const c = document.getElementById('cb_store'); if(c) c.value = user.store; }
+            setupMenuAndRouting();
+        }
+        function logout() {
+            Swal.fire({title:'Keluar?', icon:'question', showCancelButton:true, confirmButtonColor:'#e11d48'}).then((r) => {
+                if(r.isConfirmed) { currentUser = null; document.getElementById('appLayout').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden'); }
+            });
+        }
+        function setupMenuAndRouting() {
+            const nav = document.getElementById('navMenu'); let menus = [];
+            if(currentUser.role !== 'QC') menus.push({ id: 'dashboard', icon: 'fa-chart-pie', text: 'Dashboard' });
+            menus.push({ id: 'cabeprocess', icon: 'fa-pepper-hot', text: 'Cabe Process' });
+            menus.push({ id: 'kalibrasi', icon: 'fa-balance-scale-right', text: 'Kalibrasi' });
+            if(currentUser.role === 'Admin') menus.push({ id: 'settings', icon: 'fa-sliders-h', text: 'Settings' });
+
+            nav.innerHTML = menus.map(m => `<a href="#" onclick="navigate('${m.id}', '${m.text}')" id="nav-${m.id}" class="nav-link flex items-center gap-3 px-4 py-3.5 mx-2 mb-1.5 text-slate-500 rounded-xl hover:bg-slate-50 transition-all font-semibold text-sm"><div class="w-6 flex justify-center text-lg"><i class="fas ${m.icon}"></i></div><span>${m.text}</span></a>`).join('');
+            navigate(menus[0].id, menus[0].text); updateKalibrasiStd(); renderSettings();
+        }
+        function navigate(id, title) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => { el.classList.remove('bg-rose-50', 'text-primary', 'shadow-sm', 'border'); el.classList.add('text-slate-500'); });
+            document.getElementById(`page-${id}`).classList.add('active');
+            if(document.getElementById(`nav-${id}`)) { document.getElementById(`nav-${id}`).classList.remove('text-slate-500'); document.getElementById(`nav-${id}`).classList.add('bg-rose-50', 'text-primary', 'shadow-sm', 'border', 'border-rose-100/50'); }
+            document.getElementById('pageTitle').innerText = title; document.getElementById('mainScrollArea').scrollTo(0,0);
+            if(window.innerWidth < 768) toggleSidebar();
+            reloadActiveViews();
+        }
+
+        // --- Image Zoom Modal ---
+        let currentZoom = 1;
+        function openImgPreview(src) {
+            if(!src) return;
+            currentZoom = 1;
+            const t = document.getElementById('previewImgTarget');
+            t.src = src; t.style.transform = `scale(1)`;
+            document.getElementById('downloadImgBtn').href = src;
+            document.getElementById('imgPreviewModal').classList.replace('hidden', 'flex');
+            
+            setTimeout(() => { document.getElementById('imgPreviewModal').classList.add('opacity-100'); }, 10);
+        }
+        function closeImgPreview() { 
+            document.getElementById('imgPreviewModal').classList.remove('opacity-100');
+            setTimeout(() => { document.getElementById('imgPreviewModal').classList.replace('flex', 'hidden'); }, 300);
+        }
+        function zoomImg(step) {
+            currentZoom += step;
+            if(currentZoom < 0.5) currentZoom = 0.5;
+            if(currentZoom > 3) currentZoom = 3;
+            document.getElementById('previewImgTarget').style.transform = `scale(${currentZoom})`;
+        }
+
+        // --- Image Compressor ---
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                if (!file) { resolve(''); return; }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_W = 600; const MAX_H = 600; 
+                        let w = img.width; let h = img.height;
+                        if (w > h) { if (w > MAX_W) { h *= MAX_W / w; w = MAX_W; } } 
+                        else { if (h > MAX_H) { w *= MAX_H / h; h = MAX_H; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                };
+            });
+        }
+
+        // --- Cabe Process Logic ---
+        function calcSusut() {
+            const b = parseFloat(document.getElementById('cb_before').value) || 0; const a = parseFloat(document.getElementById('cb_after').value) || 0;
+            const box = document.getElementById('cb_susut_box');
+            if(b>0 && a>0) {
+                const s = b - a; box.innerText = `${s>0?'+':''}${s} gr`;
+                box.className = `w-full rounded-xl px-4 py-3.5 text-xl font-bold text-center transition-all ${s<0?'bg-rose-50 text-rose-600 border-rose-200':'bg-emerald-50 text-emerald-600 border-emerald-200'} border`;
+            } else { box.innerText = "0 gr"; box.className = "w-full rounded-xl bg-slate-100 border-dashed border-2 border-slate-200 px-4 py-3.5 text-xl font-bold text-center text-slate-400"; }
+        }
+
+        async function submitCabeProcess(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitForm');
+            const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...'; btn.disabled = true;
+
+            const b64Before = await compressImage(document.getElementById('cb_foto_before').files[0]);
+            const b64After = await compressImage(document.getElementById('cb_foto_after').files[0]);
+            const b = parseFloat(document.getElementById('cb_before').value);
+            const a = parseFloat(document.getElementById('cb_after').value);
+            
+            const newData = {
+                id: editingId ? editingId : Date.now(),
+                tanggal: new Date().toISOString().split('T')[0], jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                petugas: document.getElementById('cb_petugas').value, store: document.getElementById('cb_store').value,
+                batch: document.getElementById('cb_batch').value, before: b, after: a, susut: b - a, ket: document.getElementById('cb_ket').value,
+                fotoBefore: b64Before, fotoAfter: b64After
+            };
+
+            if (editingId) {
+                const idx = APP_DATA.cabeProcess.findIndex(x => x.id === editingId);
+                if(idx !== -1) {
+                    newData.tanggal = APP_DATA.cabeProcess[idx].tanggal; newData.jam = APP_DATA.cabeProcess[idx].jam;
+                    if(!b64Before) newData.fotoBefore = APP_DATA.cabeProcess[idx].fotoBefore;
+                    if(!b64After) newData.fotoAfter = APP_DATA.cabeProcess[idx].fotoAfter;
+                }
+            }
+
+            callAPI('saveCabeProcess', newData).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) {
+                    refreshData(true);
+                    Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEdit(); 
+                } else {
+                    Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+                }
+            });
+        }
+
+        function cancelEdit() {
+            editingId = null; document.getElementById('formCabe').reset(); calcSusut();
+            document.getElementById('formTitle').innerHTML = "Form Proses Steam Cabe"; document.getElementById('btnSubmitForm').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan Data';
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+        }
+
+        function viewCabe(id) {
+            const d = APP_DATA.cabeProcess.find(x => x.id === id);
+            if (d) {
+                let badgeClass = d.susut < 0 ? 'bg-rose-100 text-rose-700' : (d.susut > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700');
+                let fotB = d.fotoBefore ? `<img src="${d.fotoBefore}" onclick="openImgPreview('${d.fotoBefore}')" class="w-full h-28 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-lg transition" title="Klik untuk perbesar">` : `<div class="w-full h-28 flex items-center justify-center bg-slate-50 border border-dashed border-slate-300 rounded-xl text-slate-400 text-xs"><i class="fas fa-image mr-1"></i> Kosong</div>`;
+                let fotA = d.fotoAfter ? `<img src="${d.fotoAfter}" onclick="openImgPreview('${d.fotoAfter}')" class="w-full h-28 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-lg transition" title="Klik untuk perbesar">` : `<div class="w-full h-28 flex items-center justify-center bg-slate-50 border border-dashed border-slate-300 rounded-xl text-slate-400 text-xs"><i class="fas fa-image mr-1"></i> Kosong</div>`;
+                
+                let safeDate = '-'; let safeTime = '-';
+                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                if (d.jam) { let jStr = String(d.jam); if (jStr.includes('GMT') || jStr.includes('T')) { let j = new Date(jStr); if (!isNaN(j.getTime())) safeTime = String(j.getHours()).padStart(2, '0') + ':' + String(j.getMinutes()).padStart(2, '0'); } else { let m = jStr.match(/\d{2}:\d{2}/); safeTime = m ? m[0] : jStr.substring(0, 5); } }
+                
+                let tglText = `${safeDate} ${safeTime} WIB`;
+
+                Swal.fire({
+                    title: 'Detail Proses Cabe',
+                    html: `
+                        <div class="text-left text-sm space-y-3 mt-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500">Waktu</span> <span class="font-bold">${tglText}</span></div>
+                            <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500">Store & Batch</span> <span class="font-bold">${d.store} &bull; ${d.batch}</span></div>
+                            <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500">Petugas</span> <span class="font-bold">${d.petugas}</span></div>
+                            <div class="flex justify-between border-b border-slate-200 pb-2 items-center"><span class="text-slate-500">Total Susut</span> <span class="px-2 py-1 rounded font-bold ${badgeClass}">${d.susut>0?'+':''}${d.susut} gr</span></div>
+                            <div class="flex gap-4 pt-2">
+                                <div class="w-1/2 text-center"><span class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Before (${d.before}g)</span>${fotB}</div>
+                                <div class="w-1/2 text-center"><span class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">After (${d.after}g)</span>${fotA}</div>
+                            </div>
+                        </div>
+                    `,
+                    confirmButtonColor: '#0f172a', confirmButtonText: 'Tutup'
+                });
+            }
+        }
+
+        function editCabe(id) {
+            const d = APP_DATA.cabeProcess.find(x => x.id === id);
+            if(d) {
+                editingId = id;
+                document.getElementById('cb_store').value = d.store; document.getElementById('cb_batch').value = d.batch;
+                document.getElementById('cb_before').value = d.before; document.getElementById('cb_after').value = d.after; document.getElementById('cb_ket').value = d.ket;
+                calcSusut();
+                if(document.getElementById('formCabeBody').style.display === 'none') toggleElement('formCabeBody', 'iconFormCabe');
+                document.getElementById('formTitle').innerHTML = "<span class='text-amber-500'><i class='fas fa-edit'></i> Edit Proses Cabe</span>";
+                document.getElementById('btnSubmitForm').innerHTML = '<i class="fas fa-save"></i> Update Data';
+                document.getElementById('btnCancelEdit').classList.remove('hidden');
+                document.getElementById('formCabeContainer').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function deleteCabe(id) {
+            Swal.fire({ title: 'Hapus Data?', text: "Dihapus permanen!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if (r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteCabeProcess', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function renderTableCabe() {
+            const tbody = document.getElementById('tabelCabeBody');
+            const search = document.getElementById('searchCabe').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterStart').value; const filterEnd = document.getElementById('tabelFilterEnd').value;
+            const filterStore = document.getElementById('tabelFilterStore').value; const weekFilter = document.getElementById('weekFilter').value; 
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+
+            let data = APP_DATA.cabeProcess.filter(d => {
+                let m1 = d.store.toLowerCase().includes(search) || d.petugas.toLowerCase().includes(search) || d.batch.toLowerCase().includes(search);
+                let m2 = filterStore === 'All' || d.store === filterStore;
+                
+                let safeDate = '-';
+                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+
+            let sumD=0, sumM=0, sumW=0, sumBefore=0;
+            data.forEach(d => {
+                sumD += d.susut; sumM += d.susut; 
+                sumBefore += (parseFloat(d.before) || 0);
+
+                let safeDate = '-';
+                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                
+                if(safeDate !== '-') {
+                    let day = parseInt(safeDate.split('-')[2]); let dw = "W4";
+                    if(day<=7) dw="W1"; else if(day<=14) dw="W2"; else if(day<=21) dw="W3";
+                    if(dw === weekFilter) sumW += d.susut;
+                }
+            });
+
+            // Update DOM Summary
+            document.getElementById('sumSusutDaily').innerText = `${sumD>0?'+':''}${sumD} gr`; 
+            document.getElementById('sumSusutWeekly').innerText = `${sumW>0?'+':''}${sumW} gr`; 
+            document.getElementById('sumSusutMonthly').innerText = `${sumM>0?'+':''}${sumM} gr`;
+            document.getElementById('sumCabeTerpakai').innerText = `${sumBefore} gr`;
+            
+            let totalResep = sumBefore / 3000;
+            let resepText = totalResep % 1 === 0 ? totalResep : totalResep.toFixed(2);
+            document.getElementById('sumCabeResep').innerHTML = `<i class="fas fa-utensils mr-1"></i> ${resepText} Resep`;
+
+            document.getElementById('tabelCabeInfo').innerText = `Menampilkan ${data.length} data`;
+
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-medium">Tidak ada data ditemukan</td></tr>`; return; }
+
+            tbody.innerHTML = data.map(d => {
+                let badge = `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded font-bold text-xs">0 gr</span>`;
+                if(d.susut<0) badge = `<span class="bg-rose-50 text-rose-600 border border-rose-100 px-2 py-1 rounded font-bold text-xs">${d.susut} gr</span>`;
+                if(d.susut>0) badge = `<span class="bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-1 rounded font-bold text-xs">+${d.susut} gr</span>`;
+                
+                let imgB = d.fotoBefore ? `<i class="fas fa-image text-blue-500 cursor-pointer hover:scale-110 transition" title="Lihat Foto Before" onclick="openImgPreview('${d.fotoBefore}')"></i>` : '';
+                let imgA = d.fotoAfter ? `<i class="fas fa-image text-emerald-500 cursor-pointer hover:scale-110 transition" title="Lihat Foto After" onclick="openImgPreview('${d.fotoAfter}')"></i>` : '';
+
+                let acts = `<button onclick="viewCabe(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-blue-500 hover:bg-blue-100 transition mx-0.5"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editCabe(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteCabe(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                let safeDate = '-'; let safeTime = '-';
+                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                if (d.jam) { let jStr = String(d.jam); if (jStr.includes('GMT') || jStr.includes('T')) { let j = new Date(jStr); if (!isNaN(j.getTime())) safeTime = String(j.getHours()).padStart(2, '0') + ':' + String(j.getMinutes()).padStart(2, '0'); } else { let m = jStr.match(/\d{2}:\d{2}/); safeTime = m ? m[0] : jStr.substring(0, 5); } }
+
+                return `<tr class="hover:bg-slate-50/70 border-b border-slate-50">
+                    <td class="px-6 py-4"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-4 font-medium">${d.petugas}</td>
+                    <td class="px-6 py-4"><p class="font-semibold text-slate-700">${d.store}</p><span class="inline-block mt-1 bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${d.batch}</span></td>
+                    <td class="px-6 py-4 text-center font-semibold text-slate-600"><div class="flex items-center justify-center gap-2">${d.before} ${imgB}</div></td>
+                    <td class="px-6 py-4 text-center font-semibold text-slate-600"><div class="flex items-center justify-center gap-2">${d.after} ${imgA}</div></td>
+                    <td class="px-6 py-4 text-center">${badge}</td>
+                    <td class="px-6 py-4 text-center">${acts}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- Kalibrasi Logic ---
+        function updateKalibrasiStd() {
+            const cat = document.getElementById('kal_kategori').value;
+            if(!APP_DATA.settings.kalibrasi[cat]) return;
+            const std = APP_DATA.settings.kalibrasi[cat];
+            ['l1','l2','l3','l4','l6','l8'].forEach(l => { document.getElementById(`std_${l}`).innerText = std[l]; });
+            evalKalibrasi(); 
+        }
+
+        function evalKalibrasi() {
+            const cat = document.getElementById('kal_kategori').value;
+            if(!APP_DATA.settings.kalibrasi[cat]) return;
+            ['l1','l2','l3','l4','l6','l8'].forEach(lvl => {
+                const stdVal = parseFloat(APP_DATA.settings.kalibrasi[cat][lvl]);
+                let match = 0, fill = 0;
+                document.querySelectorAll(`.kal-input-${lvl}`).forEach(inp => { if(inp.value!=="") { fill++; if(parseFloat(inp.value)===stdVal) match++; } });
+                const c = document.getElementById(`status_${lvl}`);
+                if(fill===0) { c.innerHTML = '-'; return; }
+                let txt = "Bad", cls = "bg-rose-50 text-rose-600 border-rose-200";
+                if(match>=8) { txt = "Good"; cls = "bg-emerald-50 text-emerald-600 border-emerald-200"; } 
+                else if(match>=5) { txt = "Need Improve"; cls = "bg-amber-50 text-amber-600 border-amber-200"; }
+                c.innerHTML = `<span class="px-2 py-1 rounded border shadow-sm ${cls}">${txt}</span>`;
+            });
+        }
+
+        function submitKalibrasi(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitKalibrasi'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
+            const kat = document.getElementById('kal_kategori').value; const res = {};
+            
+            ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'].forEach(lvl => {
+                const stdVal = parseFloat(APP_DATA.settings.kalibrasi[kat][lvl]);
+                const vals = Array.from(document.querySelectorAll(`.kal-input-${lvl}`)).map(inp => parseFloat(inp.value) || 0);
+                let m = vals.filter(v => v === stdVal).length;
+                res[lvl] = { values: vals, status: m>=8 ? "Good" : (m>=5 ? "Need Improvement" : "Bad") };
+            });
+            
+            const newData = {
+                id: editingKalibrasiId ? editingKalibrasiId : Date.now(), tglJam: document.getElementById('kal_tgl').value,
+                petugas: document.getElementById('kal_petugas').value, crew: document.getElementById('kal_crew').value,
+                store: document.getElementById('kal_store').value, batch: document.getElementById('kal_batch').value,
+                kategori: kat, results: res
+            };
+
+            callAPI('saveKalibrasiData', newData).then(r => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(r.success) {
+                    refreshData(true);
+                    Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditKalibrasi();
+                } else {
+                    Swal.fire('Error', r.message || 'Gagal menyimpan.', 'error');
+                }
+            });
+        }
+
+        function renderTableKalibrasi() {
+            const tbody = document.getElementById('tabelKalBody');
+            const search = document.getElementById('searchKalibrasi').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterKalStart').value; const filterEnd = document.getElementById('tabelFilterKalEnd').value;
+            const filterStore = document.getElementById('tabelFilterKalStore').value; const isAdmin = currentUser && currentUser.role === 'Admin';
+
+            let data = APP_DATA.kalibrasi.filter(d => {
+                let m1 = d.store.toLowerCase().includes(search) || d.petugas.toLowerCase().includes(search) || d.crew.toLowerCase().includes(search) || d.batch.toLowerCase().includes(search);
+                let m2 = filterStore === 'All' || d.store === filterStore;
+                
+                let kDate = '-';
+                if (d.tglJam) { let t = new Date(d.tglJam); if (!isNaN(t.getTime())) { kDate = t.toLocaleDateString('en-CA'); } else { let p = String(d.tglJam).split('T'); kDate = p[0] || '-'; } }
+                
+                return m1 && m2 && (!filterStart || kDate>=filterStart) && (!filterEnd || kDate<=filterEnd);
+            });
+            document.getElementById('tabelKalInfo').innerText = `Menampilkan ${data.length} data`;
+
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-medium">Tidak ada data</td></tr>`; return; }
+
+            tbody.innerHTML = data.map(d => {
+                let html = `<div class="flex gap-1.5 flex-wrap justify-center">`;
+                const map = { l1: 'L1', l2: 'L2', l3: 'L3', l4: 'L4', l6: 'L6', l8: 'L8' };
+                for(let lvl in d.results) {
+                    let stat = d.results[lvl].status; let bCls = stat === 'Good' ? 'bg-emerald-50 text-emerald-600' : (stat === 'Bad' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600');
+                    html += `<span class="text-[10px] px-1.5 py-0.5 rounded border font-bold ${bCls}" title="${stat}">${map[lvl]}</span>`;
+                }
+                html += `</div>`;
+
+                let acts = `<button onclick="viewKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-blue-500 hover:bg-blue-100 transition mx-0.5"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                
+                let kDate = '-'; let kTime = '-';
+                if (d.tglJam) { let t = new Date(d.tglJam); if (!isNaN(t.getTime())) { kDate = t.toLocaleDateString('en-CA'); kTime = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0'); } else { let p = String(d.tglJam).split('T'); kDate = p[0] || '-'; if(p[1]) kTime = p[1].substring(0,5); } }
+
+                return `<tr class="hover:bg-slate-50/70 border-b border-slate-50">
+                    <td class="px-6 py-4"><p class="font-semibold text-slate-700">${kDate}</p><p class="text-[10px] text-slate-400">${kTime} WIB</p></td>
+                    <td class="px-6 py-4"><p class="font-semibold text-slate-700">${d.petugas}</p><p class="text-[10px] text-slate-500"><i class="fas fa-user-friends"></i> ${d.crew}</p></td>
+                    <td class="px-6 py-4"><p class="font-semibold text-slate-700">${d.store}</p><span class="inline-block mt-1 bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">${d.batch}</span></td>
+                    <td class="px-6 py-4"><span class="font-bold text-primary uppercase text-[10px]">${d.kategori}</span></td>
+                    <td class="px-6 py-4 text-center">${html}</td>
+                    <td class="px-6 py-4 text-center">${acts}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function viewKalibrasi(id) {
+            const d = APP_DATA.kalibrasi.find(x => x.id === id); if(!d) return;
+            
+            let kDate = '-'; let kTime = '-';
+            if (d.tglJam) { let t = new Date(d.tglJam); if (!isNaN(t.getTime())) { kDate = t.toLocaleDateString('en-CA'); kTime = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0'); } else { let p = String(d.tglJam).split('T'); kDate = p[0] || '-'; if(p[1]) kTime = p[1].substring(0,5); } }
+            let timeStr = kDate + ' ' + kTime;
+
+            let h = `<div class="text-left text-sm mt-4"><div class="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-3 rounded-xl"><div class="text-xs">Waktu:<br><b class="text-sm">${timeStr} WIB</b></div><div class="text-xs">Petugas:<br><b class="text-sm">${d.petugas}/${d.crew}</b></div></div><table class="w-full text-xs text-center border"><thead class="bg-slate-100"><tr><th class="p-2">Lvl</th><th class="p-2">Status</th><th class="p-2">Takaran</th></tr></thead><tbody>`;
+            ['l1','l2','l3','l4','l6','l8'].forEach(l => {
+                let res = d.results[l]; let std = parseFloat(APP_DATA.settings.kalibrasi[d.kategori][l]);
+                let vals = res.values.map(v => `<span class="inline-block w-6 ${v===std?'text-emerald-600 bg-emerald-50':'text-rose-600 bg-rose-50'} border rounded mx-[1px] shadow-sm">${v}</span>`).join('');
+                let b = res.status === 'Good' ? 'text-emerald-600 bg-emerald-50' : (res.status === 'Bad' ? 'text-rose-600 bg-rose-50' : 'text-amber-600 bg-amber-50');
+                h += `<tr><td class="p-2 font-bold">${l.toUpperCase()}</td><td class="p-2"><span class="px-2 py-1 rounded border ${b}">${res.status}</span></td><td class="p-2">${vals}</td></tr>`;
+            });
+            Swal.fire({ title: 'Detail Kalibrasi', html: h + `</tbody></table></div>`, width: '600px', confirmButtonColor: '#0f172a' });
+        }
+
+        function editKalibrasi(id) {
+            const d = APP_DATA.kalibrasi.find(x => x.id === id);
+            if(d) {
+                editingKalibrasiId = id;
+                document.getElementById('kal_tgl').value = d.tglJam; document.getElementById('kal_crew').value = d.crew;
+                document.getElementById('kal_store').value = d.store; document.getElementById('kal_batch').value = d.batch; document.getElementById('kal_kategori').value = d.kategori;
+                updateKalibrasiStd();
+                ['l1','l2','l3','l4','l6','l8'].forEach(l => {
+                    let v = d.results[l].values;
+                    document.querySelectorAll(`.kal-input-${l}`).forEach((inp, i) => { inp.value = v[i] !== undefined ? v[i] : ""; });
+                });
+                evalKalibrasi();
+                if(document.getElementById('formKalBody').style.display === 'none') toggleElement('formKalBody', 'iconFormKal');
+                document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelKalibrasi').classList.remove('hidden');
+                document.getElementById('formKalContainer').scrollIntoView();
+            }
+        }
+        function cancelEditKalibrasi() {
+            editingKalibrasiId = null; document.getElementById('formKalibrasi').reset(); evalKalibrasi();
+            document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Simpan'; document.getElementById('btnCancelKalibrasi').classList.add('hidden');
+        }
+        function deleteKalibrasi(id) {
+            Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if(r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteKalibrasiData', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!','','success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        // --- Dashboard Summaries & Charts ---
+        function filterDashboard() {
+            const start = document.getElementById('filterStart').value; const end = document.getElementById('filterEnd').value; const store = document.getElementById('filterStore').value;
+            let fd = APP_DATA.cabeProcess;
+            if(store !== 'All') fd = fd.filter(d => d.store === store);
+            if(start) fd = fd.filter(d => d.tanggal >= start);
+            if(end) fd = fd.filter(d => d.tanggal <= end);
+            
+            let st = {}; APP_DATA.stores.forEach(s => st[s.name] = 0); let totM = 0;
+            fd.forEach(d => { if(st[d.store] !== undefined) st[d.store] += d.susut; totM += d.susut; });
+
+            let maxS="-", maxV=-999999, minS="-", minV=999999, hasD=false;
+            for(let s in st) { if(fd.some(d => d.store === s)) { hasD=true; if(st[s]>maxV){maxV=st[s];maxS=s;} if(st[s]<minV){minV=st[s];minS=s;} } }
+            if(!hasD) { maxV=0; minV=0; }
+
+            document.getElementById('dashMaxStore').innerText = maxS; document.getElementById('dashMaxVal').innerText = `${maxV>0?'+':''}${maxV} gr`;
+            document.getElementById('dashMinStore').innerText = minS; document.getElementById('dashMinVal').innerText = `${minV>0?'+':''}${minV} gr`;
+            document.getElementById('dashTotalMonthly').innerText = `${totM>0?'+':''}${totM} gr`; document.getElementById('dashTotalStore').innerText = APP_DATA.stores.length;
+
+            initCharts(fd);
+        }
+
+        function initCharts(data) {
+            if(charts.c1) { charts.c1.destroy(); charts.c2.destroy(); charts.c3.destroy(); charts.c4.destroy(); }
+            Chart.defaults.font.family = "'Inter', sans-serif"; Chart.defaults.color = '#64748b';
+
+            let sLabs = APP_DATA.stores.map(s => s.name); let pD = []; let bD = [];
+            APP_DATA.stores.forEach(s => {
+                pD.push(data.filter(d => d.store === s.name).reduce((a, b) => a + b.before, 0));
+                bD.push(data.filter(d => d.store === s.name).reduce((a, b) => a + b.susut, 0));
+            });
+
+            let uniqueHours = new Set();
+            data.forEach(d => { if(d.jam) uniqueHours.add(d.jam.split(':')[0] + ':00'); });
+            let hLabs = Array.from(uniqueHours).sort();
+            if(hLabs.length === 0) hLabs = ['-']; 
+
+            let dsC1 = []; let colsBefore = ['#e11d48', '#f43f5e', '#fb7185']; let colsAfter = ['#3b82f6', '#60a5fa', '#93c5fd'];
+            const mode = document.getElementById('chartCategoryFilter').value;
+
+            if(APP_DATA.stores.length > 0 && data.length > 0) {
+                APP_DATA.stores.forEach((s, i) => {
+                    let dStore = data.filter(d => d.store === s.name);
+                    if(dStore.length > 0) {
+                        if(mode === 'both' || mode === 'before') {
+                            dsC1.push({ label: s.name + ' (Bfr)', data: hLabs.map(h => h === '-' ? 0 : dStore.filter(d => d.jam && d.jam.startsWith(h.split(':')[0])).reduce((a,b)=>a+b.before,0)), backgroundColor: colsBefore[i%colsBefore.length] });
+                        }
+                        if(mode === 'both' || mode === 'after') {
+                            dsC1.push({ label: s.name + ' (Aft)', data: hLabs.map(h => h === '-' ? 0 : dStore.filter(d => d.jam && d.jam.startsWith(h.split(':')[0])).reduce((a,b)=>a+b.after,0)), backgroundColor: colsAfter[i%colsAfter.length] });
+                        }
+                    }
+                });
+            } else { dsC1.push({ label: 'Belum ada data', data: hLabs.map(()=>0), backgroundColor: '#e2e8f0' }); }
+
+            charts.c1 = new Chart(document.getElementById('chartInputJam'), { type: 'bar', data: { labels: hLabs, datasets: dsC1 }, options: { responsive: true, maintainAspectRatio: false, scales:{x:{grid:{display:false}}} } });
+            charts.c2 = new Chart(document.getElementById('chartTotalPie'), { type: 'doughnut', data: { labels: sLabs.length?sLabs:['-'], datasets: [{ data: pD.length&&!pD.every(i=>i===0)?pD:[1], backgroundColor: sLabs.length?['#e11d48', '#3b82f6', '#10b981', '#f97316']:['#e2e8f0'] }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%' } });
+            charts.c3 = new Chart(document.getElementById('chartSusutStore'), { type: 'bar', data: { labels: sLabs.length?sLabs:['-'], datasets: [{ label: 'Total Susut (gr)', data: bD.length?bD:[0], backgroundColor: '#3b82f6', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales:{x:{grid:{display:false}}} } });
+            
+            let wD = [0,0,0,0];
+            data.forEach(d => { 
+                let safeDate = '-';
+                if (d.tanggal) {
+                    let t = new Date(d.tanggal);
+                    if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA');
+                    else safeDate = String(d.tanggal).substring(0, 10);
+                }
+                
+                if(safeDate !== '-') {
+                    let dy = parseInt(safeDate.split('-')[2]); 
+                    if(!isNaN(dy)) {
+                        if(dy<=7) wD[0]+=d.susut; else if(dy<=14) wD[1]+=d.susut; else if(dy<=21) wD[2]+=d.susut; else wD[3]+=d.susut; 
+                    }
+                }
+            });
+            charts.c4 = new Chart(document.getElementById('chartSusutWeekly'), { type: 'bar', data: { labels: ['W1','W2','W3','W4'], datasets: [{ label: 'Susut Mingguan', data: wD, backgroundColor: '#10b981', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales:{x:{grid:{display:false}}} } });
+        }
+
+        // --- Settings Management ---
+        function saveStore(e) {
+            e.preventDefault();
+            const input = document.getElementById('storeNameInput').value.trim();
+            if(!input) return;
+            
+            const btn = document.getElementById('btnSaveStore');
+            const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+
+            const newData = { id: editingStoreId || Date.now(), name: input };
+
+            callAPI('saveStore', newData).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    refreshData(true); document.getElementById('formStore').reset(); cancelStoreEdit(); 
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'Store tersimpan', showConfirmButton:false, timer:1500}); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            });
+        }
+
+        function editStore(id) {
+            const store = APP_DATA.stores.find(x => x.id === id);
+            if(store) {
+                editingStoreId = id; document.getElementById('storeNameInput').value = store.name;
+                document.getElementById('btnSaveStore').innerHTML = '<i class="fas fa-save"></i>'; document.getElementById('btnCancelStore').classList.remove('hidden');
+            }
+        }
+
+        function cancelStoreEdit() {
+            editingStoreId = null; document.getElementById('formStore').reset();
+            document.getElementById('btnSaveStore').innerHTML = '<i class="fas fa-plus"></i>'; document.getElementById('btnCancelStore').classList.add('hidden');
+        }
+
+        function deleteStore(id) {
+            Swal.fire({title:'Hapus Store?', icon:'warning', showCancelButton:true, confirmButtonColor:'#e11d48'}).then(r => {
+                if(r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteStore', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function openUserModal(mode, id = null) {
+            const m = document.getElementById('userModal'); m.classList.remove('hidden');
+            const storeSel = document.getElementById('u_store');
+            storeSel.innerHTML = '<option value="All">All Store</option>' + APP_DATA.stores.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            
+            if(mode === 'edit' && id) {
+                editingUserId = id; const user = APP_DATA.users.find(x => x.id === id);
+                document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-edit text-primary"></i> Edit User';
+                document.getElementById('u_name').value = user.name; document.getElementById('u_role').value = user.role;
+                document.getElementById('u_store').value = user.store; document.getElementById('u_username').value = user.username;
+                document.getElementById('u_password').value = user.password;
+            } else {
+                editingUserId = null; document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-plus text-primary"></i> Tambah User';
+                document.getElementById('formUser').reset();
+            }
+        }
+
+        function closeUserModal() { document.getElementById('userModal').classList.add('hidden'); editingUserId = null; }
+
+        function saveUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveUserModal'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
+            
+            const newData = {
+                id: editingUserId || Date.now(), name: document.getElementById('u_name').value, role: document.getElementById('u_role').value,
+                store: document.getElementById('u_store').value, username: document.getElementById('u_username').value, password: document.getElementById('u_password').value
+            };
+
+            callAPI('saveUser', newData).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    refreshData(true); closeUserModal(); 
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'User tersimpan', showConfirmButton:false, timer:1500}); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            });
+        }
+
+        function deleteUser(id) {
+            Swal.fire({title:'Hapus User?', icon:'warning', showCancelButton:true, confirmButtonColor:'#e11d48'}).then(r => {
+                if(r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteUser', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function saveGramasiSettings() {
+            const btn = document.getElementById('btnSaveGramasi'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+
+            const kal = {
+                gacoan: { l1: parseFloat(document.getElementById('set_g_l1').value) || 0, l2: parseFloat(document.getElementById('set_g_l2').value) || 0, l3: parseFloat(document.getElementById('set_g_l3').value) || 0, l4: parseFloat(document.getElementById('set_g_l4').value) || 0, l6: parseFloat(document.getElementById('set_g_l6').value) || 0, l8: parseFloat(document.getElementById('set_g_l8').value) || 0 },
+                hompimpa: { l1: parseFloat(document.getElementById('set_h_l1').value) || 0, l2: parseFloat(document.getElementById('set_h_l2').value) || 0, l3: parseFloat(document.getElementById('set_h_l3').value) || 0, l4: parseFloat(document.getElementById('set_h_l4').value) || 0, l6: parseFloat(document.getElementById('set_h_l6').value) || 0, l8: parseFloat(document.getElementById('set_h_l8').value) || 0 }
+            };
+
+            callAPI('saveSettings', { kalibrasi: kal }).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    APP_DATA.settings.kalibrasi = kal; updateKalibrasiStd(); 
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'Tersimpan', showConfirmButton:false, timer:1500}); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            });
+        }
+
+        function saveSystemSettings() {
+            const btn = document.getElementById('btnSaveSys'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+
+            const logo = document.getElementById('set_logo').value; const copy = document.getElementById('set_copyright').value;
+
+            callAPI('saveSettings', { logoApp: logo, copyright: copy }).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    APP_DATA.settings.logoApp = logo; APP_DATA.settings.copyright = copy; initAppUI(); 
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'Tersimpan', showConfirmButton:false, timer:1500}); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            });
+        }
+
+        function renderSettings() {
+            const sRender = document.getElementById('storeListRender');
+            sRender.innerHTML = APP_DATA.stores.map(s => `
+                <div class="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                    <div class="font-semibold text-slate-700 flex items-center gap-3"><i class="fas fa-store text-slate-400"></i> ${s.name}</div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="editStore(${s.id})" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
+                        <button type="button" onclick="deleteStore(${s.id})" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-center py-4 text-slate-400 text-sm">Belum ada store</div>';
+
+            const uRender = document.getElementById('userListRender');
+            uRender.innerHTML = APP_DATA.users.map(u => `
+                <div class="flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex justify-center items-center font-bold shadow-inner"><i class="fas fa-user"></i></div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm leading-tight">${u.name}</h4>
+                            <p class="text-[10px] text-slate-400 font-medium">${u.role} &bull; ${u.store}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openUserModal('edit', ${u.id})" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
+                        <button type="button" onclick="deleteUser(${u.id})" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-center py-4 text-slate-400 text-sm">Belum ada user</div>';
+            
+            const prevLogo = document.getElementById('previewLogoSetting');
+            if(prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
+        }
+
+        // --- Export Data ---
+        function exportExcel(tableId, filename) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            try {
+                const wb = XLSX.utils.table_to_book(table, {sheet: "Data"});
+                XLSX.writeFile(wb, filename + '.xlsx');
+            } catch(e) {
+                Swal.fire('Error', 'Gagal membuat Excel. Pastikan library termuat.', 'error');
+            }
+        }
+
+        function exportPDF(tableId, filename) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            try {
+                let body = []; let headRow = [];
+                table.querySelectorAll('thead th').forEach(th => headRow.push({text: th.innerText, style: 'tableHeader'}));
+                body.push(headRow);
+                
+                table.querySelectorAll('tbody tr').forEach(tr => {
+                    let row = [];
+                    tr.querySelectorAll('td').forEach(td => row.push({text: td.innerText, fontSize: 10}));
+                    if(row.length > 0) body.push(row);
+                });
+                
+                const docDefinition = {
+                    content: [
+                        { text: filename.replace(/_/g, ' '), style: 'header' },
+                        { table: { headerRows: 1, widths: Array(headRow.length).fill('auto'), body: body } }
+                    ],
+                    styles: {
+                        header: { fontSize: 16, bold: true, margin: [0, 0, 0, 10] },
+                        tableHeader: { bold: true, fontSize: 11, color: 'black', fillColor: '#eeeeee' }
+                    },
+                    pageOrientation: 'landscape',
+                    defaultStyle: { fontSize: 10 }
+                };
+                pdfMake.createPdf(docDefinition).download(filename + '.pdf');
+            } catch(e) {
+                Swal.fire('Error', 'Gagal membuat PDF. Pastikan library termuat.', 'error');
+            }
+        }
+        
+    </script>
+</body>
+</html>

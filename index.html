@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Steam Cabe</title>
+    <!-- Favicon -->
+    <link id="dynamic-favicon" rel="icon" href="">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -83,12 +85,12 @@
         // ==========================================
         // KONFIGURASI API BACKEND (PASTE URL DI SINI)
         // ==========================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3AWBW2a_dxsqWfec8DP9UhQdfVW6tvOsEjyOWT_nEyQ8t6RXiaof2V4ws3GCAhLww/exec'; 
+        const SCRIPT_URL = 'URL_DEPLOY_APPS_SCRIPT_ANDA_DISINI'; 
 
         let APP_DATA = {
             users: [], stores: [],
             settings: {
-                logoApp: 'https://www.dsppa.smartnusantara.com/image/cop.png',
+                logoApp: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Chili_pepper_icon.svg/1024px-Chili_pepper_icon.svg.png',
                 copyright: '© 2026 Noodle Company. All rights reserved.',
                 kalibrasi: {
                     gacoan: { l1: 10, l2: 20, l3: 30, l4: 40, l6: 60, l8: 80 },
@@ -243,7 +245,7 @@
                         </div>
                         <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-20 h-20 bg-emerald-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
-                            <div class="w-12 h-12 rounded-2xl icon-green flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-chevron-circle-down"></i></div>
+                            <div class="w-12 h-12 rounded-2xl icon-green flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
                             <div class="z-10 w-full">
                                 <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Susut Terkecil</h4>
                                 <p class="text-xl font-bold text-slate-800 truncate" id="dashMinStore">-</p>
@@ -324,32 +326,32 @@
                         <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
                             <div class="w-14 h-14 rounded-2xl icon-orange flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-weight-hanging"></i></div>
-                            <div class="z-10 w-full">
-                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-bold uppercase tracking-wide mb-1.5">Total Terpakai</h4>
+                            <div class="z-10 w-full min-w-0">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-bold uppercase tracking-wide mb-1.5 truncate">Total Terpakai</h4>
                                 <div class="flex flex-col">
-                                    <p class="text-2xl sm:text-3xl font-bold text-slate-800 leading-none" id="sumCabeTerpakai">0 gr</p>
-                                    <p class="text-[10px] font-semibold text-orange-600 mt-2 bg-orange-50 self-start px-2 py-1 rounded-md border border-orange-100" id="sumCabeResep"><i class="fas fa-utensils mr-1"></i> 0 Resep</p>
+                                    <p class="text-xl sm:text-2xl font-bold text-slate-800 leading-tight truncate" id="sumCabeTerpakai">0 gr</p>
+                                    <p class="text-[10px] font-semibold text-orange-600 mt-2 bg-orange-50 self-start px-2 py-1 rounded-md border border-orange-100 truncate max-w-full" id="sumCabeResep"><i class="fas fa-utensils mr-1"></i> 0 Resep</p>
                                 </div>
                             </div>
                         </div>
                         <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
                             <div class="w-14 h-14 rounded-2xl icon-red flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
-                            <div class="z-10 w-full">
-                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1">Susut Daily</h4>
-                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutDaily">0 gr</p>
+                            <div class="z-10 w-full min-w-0">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1 truncate">Susut Daily</h4>
+                                <p class="text-xl sm:text-2xl font-bold text-slate-800 leading-tight truncate" id="sumSusutDaily">0 gr</p>
                             </div>
                         </div>
                         <div class="modern-card p-5 flex flex-col relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform pointer-events-none"></div>
                             <div class="flex items-start justify-between z-10 w-full mb-2">
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-4 min-w-0">
                                     <div class="w-12 h-12 rounded-2xl icon-blue flex items-center justify-center text-xl shadow-sm shrink-0"><i class="fas fa-calendar-week"></i></div>
-                                    <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide">Susut Weekly</h4>
+                                    <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide truncate">Susut Weekly</h4>
                                 </div>
                             </div>
-                            <div class="z-10 w-full pl-16">
-                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutWeekly">0 gr</p>
+                            <div class="z-10 w-full pl-16 min-w-0">
+                                <p class="text-xl sm:text-2xl font-bold text-slate-800 leading-tight truncate" id="sumSusutWeekly">0 gr</p>
                                 <select id="weekFilter" onchange="renderTableCabe()" class="text-[10px] font-bold border border-slate-200 rounded-md bg-white text-primary px-1.5 py-0.5 outline-none shadow-sm cursor-pointer mt-1 relative z-20">
                                     <option value="W1">Week 1</option><option value="W2">Week 2</option><option value="W3">Week 3</option><option value="W4">Week 4</option>
                                 </select>
@@ -358,9 +360,9 @@
                         <div class="modern-card p-6 flex items-center gap-5 relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform"></div>
                             <div class="w-14 h-14 rounded-2xl icon-green flex items-center justify-center text-2xl shadow-sm z-10 shrink-0"><i class="fas fa-calendar-check"></i></div>
-                            <div class="z-10 w-full">
-                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1">Susut Monthly</h4>
-                                <p class="text-2xl sm:text-3xl font-bold text-slate-800" id="sumSusutMonthly">0 gr</p>
+                            <div class="z-10 w-full min-w-0">
+                                <h4 class="text-slate-500 text-[11px] sm:text-xs font-semibold uppercase tracking-wide mb-1 truncate">Susut Monthly</h4>
+                                <p class="text-xl sm:text-2xl font-bold text-slate-800 leading-tight truncate" id="sumSusutMonthly">0 gr</p>
                             </div>
                         </div>
                     </div>
@@ -701,6 +703,10 @@
             document.getElementById('mobileHeaderLogo').src = APP_DATA.settings.logoApp;
             document.getElementById('appCopyright').innerText = APP_DATA.settings.copyright;
             
+            // Mengatur favicon dinamis agar sama dengan logo aplikasi
+            const favicon = document.getElementById('dynamic-favicon');
+            if (favicon) favicon.href = APP_DATA.settings.logoApp;
+            
             const prevLogo = document.getElementById('previewLogoSetting');
             if (prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
             
@@ -1020,13 +1026,13 @@
             });
 
             // Update DOM Summary
-            document.getElementById('sumSusutDaily').innerText = `${sumD>0?'+':''}${sumD} gr`; 
-            document.getElementById('sumSusutWeekly').innerText = `${sumW>0?'+':''}${sumW} gr`; 
-            document.getElementById('sumSusutMonthly').innerText = `${sumM>0?'+':''}${sumM} gr`;
-            document.getElementById('sumCabeTerpakai').innerText = `${sumBefore} gr`;
+            document.getElementById('sumSusutDaily').innerText = `${sumD>0?'+':''}${sumD.toLocaleString('id-ID')} gr`; 
+            document.getElementById('sumSusutWeekly').innerText = `${sumW>0?'+':''}${sumW.toLocaleString('id-ID')} gr`; 
+            document.getElementById('sumSusutMonthly').innerText = `${sumM>0?'+':''}${sumM.toLocaleString('id-ID')} gr`;
+            document.getElementById('sumCabeTerpakai').innerText = `${sumBefore.toLocaleString('id-ID')} gr`;
             
             let totalResep = sumBefore / 3000;
-            let resepText = totalResep % 1 === 0 ? totalResep : totalResep.toFixed(2);
+            let resepText = totalResep % 1 === 0 ? totalResep.toLocaleString('id-ID') : totalResep.toLocaleString('id-ID', {minimumFractionDigits: 1, maximumFractionDigits: 2});
             document.getElementById('sumCabeResep').innerHTML = `<i class="fas fa-utensils mr-1"></i> ${resepText} Resep`;
 
             document.getElementById('tabelCabeInfo').innerText = `Menampilkan ${data.length} data`;

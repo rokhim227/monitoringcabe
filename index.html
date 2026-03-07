@@ -106,7 +106,7 @@
         // FUNGSI UTAMA KOMUNIKASI FETCH API KE GOOGLE SCRIPT
         async function callAPI(action, payload = null) {
             try {
-                if (SCRIPT_URL === 'URL_DEPLOY_APPS_SCRIPT_ANDA_DISINI') {
+                if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx3AWBW2a_dxsqWfec8DP9UhQdfVW6tvOsEjyOWT_nEyQ8t6RXiaof2V4ws3GCAhLww/exec') {
                     throw new Error("Tolong ganti SCRIPT_URL dengan link Web App Apps Script yang benar!");
                 }
 
@@ -245,7 +245,7 @@
                         </div>
                         <div class="modern-card p-5 flex items-center gap-4 relative overflow-hidden group">
                             <div class="absolute right-0 top-0 w-20 h-20 bg-emerald-50 rounded-bl-full -mr-2 -mt-2 opacity-50 group-hover:scale-110 transition-transform"></div>
-                            <div class="w-12 h-12 rounded-2xl icon-green flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-arrow-trend-down"></i></div>
+                            <div class="w-12 h-12 rounded-2xl icon-green flex items-center justify-center text-xl shadow-sm z-10 shrink-0"><i class="fas fa-chevron-circle-down"></i></div>
                             <div class="z-10 w-full">
                                 <h4 class="text-slate-500 text-[11px] font-bold uppercase tracking-wider mb-0.5">Susut Terkecil</h4>
                                 <p class="text-xl font-bold text-slate-800 truncate" id="dashMinStore">-</p>
@@ -745,12 +745,23 @@
             if(!silent) Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
             callAPI('getAppData').then(res => {
-                if (res.success && res.data && res.data.users) {
-                    APP_DATA = res.data; initAppUI(); reloadActiveViews();
+                // Pengecekan data karena respon getAppData langsung mengembalikan object data (tidak di-wrap dalam success/data)
+                if (res && res.users) {
+                    APP_DATA = res; 
+                    initAppUI(); 
+                    reloadActiveViews();
+                    if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
+                } else if (res && res.success && res.data && res.data.users) {
+                    // Fallback jika backend API dimodifikasi mengembalikan success wrap
+                    APP_DATA = res.data; 
+                    initAppUI(); 
+                    reloadActiveViews();
                     if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
                 } else {
-                    if(!silent) Swal.fire('Error', res.message || 'Gagal memuat data dari server.', 'error');
+                    if(!silent) Swal.fire('Error', res.message || res.error || 'Gagal memuat data dari server.', 'error');
                 }
+            }).catch(err => {
+                if(!silent) Swal.fire('Error', 'Masalah koneksi jaringan ke server API.', 'error');
             });
         }
 

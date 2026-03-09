@@ -72,10 +72,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Custom style for SweetAlert to ensure it stays below image modal */
-        .swal2-container {
-            z-index: 90 !important;
-        }
+        .swal2-container { z-index: 90 !important; }
     </style>
 </head>
 <body class="text-slate-700 antialiased overflow-x-hidden">
@@ -93,8 +90,9 @@
                 logoApp: 'https://www.dsppa.smartnusantara.com/image/cop.png',
                 copyright: '© 2026 Noodle Company. All rights reserved.',
                 kalibrasi: {
-                    gacoan: { l1: 10, l2: 20, l3: 30, l4: 40, l6: 60, l8: 80 },
-                    hompimpa: { l1: 5, l2: 15, l3: 25, l4: 35, l6: 55, l8: 75 }
+                    // Berubah menjadi format string untuk mendukung range
+                    gacoan: { l1: "6-7", l2: "12-14", l3: "18-21", l4: "24-28", l6: "45-48", l8: "72-84" },
+                    hompimpa: { l1: "6-7", l2: "12-14", l3: "18-21", l4: "24-28", l6: "45-48", l8: "72-84" }
                 }
             },
             cabeProcess: [], kalibrasi: []
@@ -102,6 +100,23 @@
         
         let currentUser = null; let currentPage = 1; let charts = {};
         let editingId = null; let editingUserId = null; let editingStoreId = null; let editingKalibrasiId = null;
+
+        // FUNGSI BANTUAN UNTUK CEK RANGE GRAMASI
+        // Fungsi ini membaca "6-7" dan mengecek apakah value input masuk ke dalamnya
+        function isWithinRange(val, rangeStr) {
+            if(val === "" || isNaN(val)) return false;
+            let v = parseFloat(val);
+            let str = String(rangeStr).trim();
+            
+            if(str.includes('-')) {
+                let parts = str.split('-');
+                let min = parseFloat(parts[0]);
+                let max = parseFloat(parts[1]);
+                return v >= min && v <= max;
+            } else {
+                return v === parseFloat(str); // Fallback jika setting cuma 1 angka (misal "10")
+            }
+        }
 
         // FUNGSI UTAMA KOMUNIKASI FETCH API KE GOOGLE SCRIPT
         async function callAPI(action, payload = null) {
@@ -600,23 +615,25 @@
                                 <div class="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                                     <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-fire text-orange-500"></i> Mie Gacoan (gr)</h4>
                                     <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="number" id="set_g_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="number" id="set_g_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="number" id="set_g_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="number" id="set_g_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="number" id="set_g_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="number" id="set_g_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <!-- UBAH TYPE KE TEXT AGAR BISA INPUT RANGE (ex: 6-7) -->
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="text" id="set_g_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="6-7"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="text" id="set_g_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="12-14"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="text" id="set_g_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="18-21"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="text" id="set_g_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="24-28"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="text" id="set_g_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="45-48"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="text" id="set_g_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="72-84"></div>
                                     </div>
                                 </div>
                                 <div class="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                                     <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fas fa-pepper-hot text-primary"></i> Mie Hompimpa (gr)</h4>
                                     <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="number" id="set_h_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="number" id="set_h_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="number" id="set_h_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="number" id="set_h_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="number" id="set_h_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
-                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="number" id="set_h_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold"></div>
+                                        <!-- UBAH TYPE KE TEXT -->
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L1</label><input type="text" id="set_h_l1" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="6-7"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L2</label><input type="text" id="set_h_l2" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="12-14"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L3</label><input type="text" id="set_h_l3" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="18-21"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L4</label><input type="text" id="set_h_l4" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="24-28"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L6</label><input type="text" id="set_h_l6" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="45-48"></div>
+                                        <div><label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">L8</label><input type="text" id="set_h_l8" class="modern-input py-1.5 px-2 text-center text-sm font-semibold" placeholder="72-84"></div>
                                     </div>
                                 </div>
                                 <div class="flex justify-end"><button id="btnSaveGramasi" type="button" onclick="saveGramasiSettings()" class="bg-slate-800 text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-slate-900 transition shadow-sm flex items-center gap-2"><i class="fas fa-save"></i> Simpan</button></div>
@@ -1090,9 +1107,17 @@
             const cat = document.getElementById('kal_kategori').value;
             if(!APP_DATA.settings.kalibrasi[cat]) return;
             ['l1','l2','l3','l4','l6','l8'].forEach(lvl => {
-                const stdVal = parseFloat(APP_DATA.settings.kalibrasi[cat][lvl]);
+                const stdValStr = APP_DATA.settings.kalibrasi[cat][lvl];
                 let match = 0, fill = 0;
-                document.querySelectorAll(`.kal-input-${lvl}`).forEach(inp => { if(inp.value!=="") { fill++; if(parseFloat(inp.value)===stdVal) match++; } });
+                
+                // Cek menggunakan isWithinRange untuk mendukung format "6-7"
+                document.querySelectorAll(`.kal-input-${lvl}`).forEach(inp => { 
+                    if(inp.value!=="") { 
+                        fill++; 
+                        if(isWithinRange(inp.value, stdValStr)) match++; 
+                    } 
+                });
+                
                 const c = document.getElementById(`status_${lvl}`);
                 if(fill===0) { c.innerHTML = '-'; return; }
                 let txt = "Bad", cls = "bg-rose-50 text-rose-600 border-rose-200";
@@ -1108,9 +1133,11 @@
             const kat = document.getElementById('kal_kategori').value; const res = {};
             
             ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'].forEach(lvl => {
-                const stdVal = parseFloat(APP_DATA.settings.kalibrasi[kat][lvl]);
+                const stdValStr = APP_DATA.settings.kalibrasi[kat][lvl];
                 const vals = Array.from(document.querySelectorAll(`.kal-input-${lvl}`)).map(inp => parseFloat(inp.value) || 0);
-                let m = vals.filter(v => v === stdVal).length;
+                
+                // Cek menggunakan isWithinRange
+                let m = vals.filter(v => isWithinRange(v, stdValStr)).length;
                 res[lvl] = { values: vals, status: m>=8 ? "Good" : (m>=5 ? "Need Improvement" : "Bad") };
             });
             
@@ -1186,8 +1213,15 @@
 
             let h = `<div class="text-left text-sm mt-4"><div class="grid grid-cols-2 gap-2 mb-4 bg-slate-50 p-3 rounded-xl"><div class="text-xs">Waktu:<br><b class="text-sm">${timeStr} WIB</b></div><div class="text-xs">Petugas:<br><b class="text-sm">${d.petugas}/${d.crew}</b></div></div><table class="w-full text-xs text-center border"><thead class="bg-slate-100"><tr><th class="p-2">Lvl</th><th class="p-2">Status</th><th class="p-2">Takaran</th></tr></thead><tbody>`;
             ['l1','l2','l3','l4','l6','l8'].forEach(l => {
-                let res = d.results[l]; let std = parseFloat(APP_DATA.settings.kalibrasi[d.kategori][l]);
-                let vals = res.values.map(v => `<span class="inline-block w-6 ${v===std?'text-emerald-600 bg-emerald-50':'text-rose-600 bg-rose-50'} border rounded mx-[1px] shadow-sm">${v}</span>`).join('');
+                let res = d.results[l]; 
+                let stdValStr = APP_DATA.settings.kalibrasi[d.kategori][l];
+                
+                // Gunakan isWithinRange saat render nilai tabel di Modal view
+                let vals = res.values.map(v => {
+                    let isMatch = isWithinRange(v, stdValStr);
+                    return `<span class="inline-block w-6 ${isMatch?'text-emerald-600 bg-emerald-50':'text-rose-600 bg-rose-50'} border rounded mx-[1px] shadow-sm">${v}</span>`;
+                }).join('');
+                
                 let b = res.status === 'Good' ? 'text-emerald-600 bg-emerald-50' : (res.status === 'Bad' ? 'text-rose-600 bg-rose-50' : 'text-amber-600 bg-amber-50');
                 h += `<tr><td class="p-2 font-bold">${l.toUpperCase()}</td><td class="p-2"><span class="px-2 py-1 rounded border ${b}">${res.status}</span></td><td class="p-2">${vals}</td></tr>`;
             });
@@ -1405,9 +1439,24 @@
         function saveGramasiSettings() {
             const btn = document.getElementById('btnSaveGramasi'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
 
+            // Jangan menggunakan parseFloat di sini, agar "6-7" terbaca utuh sebagai string
             const kal = {
-                gacoan: { l1: parseFloat(document.getElementById('set_g_l1').value) || 0, l2: parseFloat(document.getElementById('set_g_l2').value) || 0, l3: parseFloat(document.getElementById('set_g_l3').value) || 0, l4: parseFloat(document.getElementById('set_g_l4').value) || 0, l6: parseFloat(document.getElementById('set_g_l6').value) || 0, l8: parseFloat(document.getElementById('set_g_l8').value) || 0 },
-                hompimpa: { l1: parseFloat(document.getElementById('set_h_l1').value) || 0, l2: parseFloat(document.getElementById('set_h_l2').value) || 0, l3: parseFloat(document.getElementById('set_h_l3').value) || 0, l4: parseFloat(document.getElementById('set_h_l4').value) || 0, l6: parseFloat(document.getElementById('set_h_l6').value) || 0, l8: parseFloat(document.getElementById('set_h_l8').value) || 0 }
+                gacoan: { 
+                    l1: document.getElementById('set_g_l1').value.trim() || "0", 
+                    l2: document.getElementById('set_g_l2').value.trim() || "0", 
+                    l3: document.getElementById('set_g_l3').value.trim() || "0", 
+                    l4: document.getElementById('set_g_l4').value.trim() || "0", 
+                    l6: document.getElementById('set_g_l6').value.trim() || "0", 
+                    l8: document.getElementById('set_g_l8').value.trim() || "0" 
+                },
+                hompimpa: { 
+                    l1: document.getElementById('set_h_l1').value.trim() || "0", 
+                    l2: document.getElementById('set_h_l2').value.trim() || "0", 
+                    l3: document.getElementById('set_h_l3').value.trim() || "0", 
+                    l4: document.getElementById('set_h_l4').value.trim() || "0", 
+                    l6: document.getElementById('set_h_l6').value.trim() || "0", 
+                    l8: document.getElementById('set_h_l8').value.trim() || "0" 
+                }
             };
 
             callAPI('saveSettings', { kalibrasi: kal }).then(res => {

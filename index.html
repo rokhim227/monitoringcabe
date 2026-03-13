@@ -104,13 +104,13 @@
             cabeDatang: [], belanjaCabe: [], cabeUtuhSisa: [], 
             cabeProcess: [], cabeSisa: [], kalibrasi: [],
             receiveNoodle: [], stockAkhirNoodle: [], 
-            analyzeData: [] // NEW ARRAY FOR ANALYZE DATA
+            analyzeData: [] 
         };
         
         let currentUser = null; let currentPage = 1; let charts = {};
         let editingId = null; let editingUserId = null; let editingStoreId = null; let editingKalibrasiId = null; let editingSisaId = null;
         let editingCdId = null; let editingBcId = null; let editingSuId = null; 
-        let editingRnId = null; let editingSanId = null; let editingAzId = null; // NEW EDITING IDs
+        let editingRnId = null; let editingSanId = null; let editingAzId = null;
 
         function isWithinRange(val, rangeStr) {
             if(val === "" || isNaN(val)) return false;
@@ -135,11 +135,29 @@
             }
         }
 
-        // Global Helper for Analyze Calculation
+        // FUNGSI PARSING TANGGAL AMAN ANTI-TIMEZONE BUG
+        function getSafeDateString(dateValue) {
+            if (!dateValue) return '-';
+            let strVal = String(dateValue);
+            // Jika formatnya sudah YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(strVal.substring(0,10))) {
+                return strVal.substring(0,10);
+            }
+            // Jika butuh di-parsing
+            let t = new Date(dateValue);
+            if (!isNaN(t.getTime())) {
+                let y = t.getFullYear();
+                let m = String(t.getMonth() + 1).padStart(2, '0');
+                let d = String(t.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+            return strVal.substring(0, 10);
+        }
+
+        // FUNGSI KALKULASI YANG DIPERBAIKI (DATE STRING MATCHING)
         function getDailyCalculations(date, storeName) {
             let filterMatch = d => {
-                let safeDate = '-';
-                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                let safeDate = getSafeDateString(d.tanggal);
                 return safeDate === date && (storeName === 'All' ? true : d.store === storeName);
             };
 
@@ -684,7 +702,7 @@
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="cb_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Crew Produksi</label><input type="text" id="cb_crew" class="modern-input" placeholder="Nama crew" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="cb_store" class="modern-input font-medium appearance-none" required></select></div>
-                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Data Batch</label><select id="cb_batch" class="modern-input appearance-none font-medium cursor-pointer" required><script>for(let i=1; i<=20; i++) document.write(`<option value="Batch ${i}">Batch ${i}</option>`);</script></select></div>
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Data Batch</label><select id="cb_batch" class="modern-input appearance-none font-medium cursor-pointer" required></select></div>
                                 </div>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-6 bg-slate-50 border border-slate-100 rounded-2xl">
@@ -988,7 +1006,7 @@
                                     <div><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Petugas</label><input type="text" id="kal_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Crew Noodle</label><input type="text" id="kal_crew" class="modern-input" placeholder="Nama crew" required></div>
                                     <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Store</label><select id="kal_store" class="modern-input appearance-none bg-slate-50 cursor-pointer" required></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
-                                    <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Batch</label><select id="kal_batch" class="modern-input appearance-none bg-slate-50 cursor-pointer" required><script>for(let i=1; i<=20; i++) document.write(`<option value="Batch ${i}">Batch ${i}</option>`);</script></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
+                                    <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Batch</label><select id="kal_batch" class="modern-input appearance-none bg-slate-50 cursor-pointer" required></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
                                     <div class="relative"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Kategori Mie</label><select id="kal_kategori" class="modern-input appearance-none cursor-pointer font-bold" onchange="updateKalibrasiStd()" required><option value="gacoan">Mie Gacoan</option><option value="hompimpa">Mie Hompimpa</option></select><i class="fas fa-chevron-down absolute right-3 top-9 text-slate-400 pointer-events-none text-xs"></i></div>
                                 </div>
                                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
@@ -1003,7 +1021,7 @@
                                                     <th class="px-4 py-3 border-b border-slate-200 w-24">Level</th><th class="px-4 py-3 border-b border-slate-200 w-24 text-center">Acuan</th><th class="px-2 py-3 border-b border-slate-200 text-center" colspan="10">Takaran Gramasi (1 - 10)</th><th class="px-4 py-3 border-b border-slate-200 text-center w-32">Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-100">
+                                            <tbody class="divide-y divide-slate-100" id="kalibrasiTableTbody">
                                                 <script>
                                                     const kalLevelsArr = ['l1', 'l2', 'l3', 'l4', 'l6', 'l8']; const kalLabels = ['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 6', 'Level 8']; let kalHtml = '';
                                                     kalLevelsArr.forEach((lvl, idx) => {
@@ -1131,7 +1149,17 @@
             <div class="p-6 overflow-y-auto">
                 <form id="formUser" onsubmit="saveUser(event)">
                     <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Nama Lengkap</label><input type="text" id="u_name" class="modern-input" required></div>
-                    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Role / Jabatan</label><select id="u_role" class="modern-input appearance-none cursor-pointer" required><option value="Admin">Admin</option><option value="Manager">Manager</option><option value="Store Manager">Store Manager</option><option value="QC">QC</option></select></div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-600 mb-1.5">Role / Jabatan</label>
+                        <select id="u_role" class="modern-input appearance-none cursor-pointer" required>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Store Manager">Store Manager</option>
+                            <option value="QC">QC</option>
+                            <option value="Stocker">Stocker</option>
+                            <option value="Crew">Crew</option>
+                        </select>
+                    </div>
                     <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Asal Store</label><select id="u_store" class="modern-input appearance-none cursor-pointer" required></select></div>
                     <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Username</label><input type="text" id="u_username" class="modern-input" required></div>
                     <div class="mb-6"><label class="block text-sm font-semibold text-slate-600 mb-1.5">Password</label><input type="text" id="u_password" class="modern-input" required></div>
@@ -1155,8 +1183,8 @@
         </div>
     </div>
 
+    <!-- SCRIPTS KESELURUHAN -->
     <script>
-        // --- Init & Fetch Data ---
         document.addEventListener('DOMContentLoaded', () => {
             callAPI('getPublicSettings').then(res => {
                 if(res.success && res.data) {
@@ -1172,12 +1200,16 @@
             }
             setInterval(updateClock, 1000); updateClock();
             
-            // Set Default dates
-            document.getElementById('filterDateSisa').value = new Date().toLocaleDateString('en-CA');
-            document.getElementById('filterDateUtuhSisa').value = new Date().toLocaleDateString('en-CA');
-            document.getElementById('filterDateStockAkhir').value = new Date().toLocaleDateString('en-CA');
-            document.getElementById('az_filter_date').value = new Date().toLocaleDateString('en-CA');
-            document.getElementById('az_form_tgl').value = new Date().toLocaleDateString('en-CA');
+            const today = new Date().toLocaleDateString('en-CA');
+            document.getElementById('filterDateSisa').value = today;
+            document.getElementById('filterDateUtuhSisa').value = today;
+            document.getElementById('filterDateStockAkhir').value = today;
+            document.getElementById('az_filter_date').value = today;
+            document.getElementById('az_form_tgl').value = today;
+            
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('kal_tgl').value = now.toISOString().slice(0,16);
         });
 
         function initAppUI() {
@@ -1192,6 +1224,13 @@
             const prevLogo = document.getElementById('previewLogoSetting');
             if (prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
             
+            // Populate Batch dynamically to prevent document.write issues
+            const batchOptions = Array.from({length: 20}, (_, i) => `<option value="Batch ${i+1}">Batch ${i+1}</option>`).join('');
+            const batchSelects = ['cb_batch', 'kal_batch'];
+            batchSelects.forEach(id => {
+                if(document.getElementById(id)) document.getElementById(id).innerHTML = batchOptions;
+            });
+
             const storeDropdowns = [
                 'filterStore', 'tabelFilterStore', 'cb_store', 'sisa_store', 'kal_store', 
                 'u_store', 'tabelFilterKalStore', 'tabelFilterRecStore', 'rn_store', 'san_store', 'tabelFilterRnStore',
@@ -1225,6 +1264,7 @@
                     }
                 });
             });
+            updateKalibrasiStd();
         }
 
         function refreshData(silent = false) {
@@ -1232,7 +1272,7 @@
             
             callAPI('getAppData').then(res => {
                 let rData = res;
-                if(res.success && res.data) rData = res.data; // Handle if wrapped
+                if(res.success && res.data) rData = res.data; 
                 
                 if (rData && rData.users) {
                     APP_DATA = rData; 
@@ -1243,6 +1283,7 @@
                     if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
                     if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
                     if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
+                    if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
                     
                     initAppUI(); 
                     reloadActiveViews();
@@ -1257,8 +1298,14 @@
 
         function reloadActiveViews() {
             if(document.getElementById('page-dashboard').classList.contains('active')) filterDashboard();
-            if(document.getElementById('page-analyze-data').classList.contains('active')) renderAnalyzeData();
+            
+            if(document.getElementById('page-analyze-data').classList.contains('active')) {
+                updateAnalyzePreview();
+                renderAnalyzeData();
+            }
+            
             if(document.getElementById('page-receive-stocker').classList.contains('active')) renderReceiveStockerData();
+            
             if(document.getElementById('page-cabeprocess').classList.contains('active')) {
                 renderTableCabe(); renderTableSisa(); renderSisaData();
             }
@@ -1288,7 +1335,6 @@
             else { s.classList.add('-translate-x-full'); o.classList.add('hidden'); }
         }
 
-        // --- Auth ---
         function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('username').value; const p = document.getElementById('password').value; const rem = document.getElementById('rememberMe').checked;
@@ -1306,6 +1352,7 @@
                     if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
                     if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
                     if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
+                    if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
                     
                     initAppUI(); processLoginSuccess(res.user, u, rem); 
                 } else { 
@@ -1322,11 +1369,9 @@
             
             document.getElementById('userInfoName').innerText = user.name; document.getElementById('userInfoRole').innerText = user.role;
             
-            // Set Auto Petugas Name
             const pIds = ['cb_petugas', 'sisa_petugas', 'kal_petugas', 'cd_petugas', 'bc_petugas', 'su_petugas', 'rn_petugas', 'san_petugas'];
             pIds.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = user.name; });
             
-            // Handle Store assignment
             if(user.store !== 'All') { 
                 const sIds = ['cb_store', 'sisa_store', 'kal_store', 'rn_store', 'san_store', 'az_form_store'];
                 sIds.forEach(id => { 
@@ -1350,7 +1395,7 @@
             const nav = document.getElementById('navMenu'); let menus = [];
             if(currentUser.role !== 'QC') menus.push({ id: 'dashboard', icon: 'fa-chart-pie', text: 'Dashboard' });
             
-            menus.push({ id: 'analyze-data', icon: 'fa-chart-line', text: 'Analyze Data' }); // NEW MENU
+            menus.push({ id: 'analyze-data', icon: 'fa-chart-line', text: 'Analyze Data' });
             menus.push({ id: 'receive-stocker', icon: 'fa-truck-loading', text: 'Receive Stocker' }); 
             menus.push({ id: 'cabeprocess', icon: 'fa-pepper-hot', text: 'Cabe Process' });
             menus.push({ id: 'receive-noodle', icon: 'fa-bowl-rice', text: 'Receive Noodle' });
@@ -1358,7 +1403,9 @@
             if(currentUser.role === 'Admin') menus.push({ id: 'settings', icon: 'fa-sliders-h', text: 'Settings' });
 
             nav.innerHTML = menus.map(m => `<a href="#" onclick="navigate('${m.id}', '${m.text}')" id="nav-${m.id}" class="nav-link flex items-center gap-3 px-4 py-3.5 mx-2 mb-1.5 text-slate-500 rounded-xl hover:bg-slate-50 transition-all font-semibold text-sm"><div class="w-6 flex justify-center text-lg"><i class="fas ${m.icon}"></i></div><span>${m.text}</span></a>`).join('');
-            navigate(menus[0].id, menus[0].text); updateKalibrasiStd(); renderSettings();
+            navigate(menus[0].id, menus[0].text); 
+            updateKalibrasiStd(); 
+            renderSettings();
         }
         
         function navigate(id, title) {
@@ -1371,7 +1418,6 @@
             reloadActiveViews();
         }
 
-        // --- Image Zoom Modal ---
         let currentZoom = 1;
         function openImgPreview(src) {
             if(!src) return;
@@ -1380,7 +1426,6 @@
             t.src = src; t.style.transform = `scale(1)`;
             document.getElementById('downloadImgBtn').href = src;
             document.getElementById('imgPreviewModal').classList.replace('hidden', 'flex');
-            
             setTimeout(() => { document.getElementById('imgPreviewModal').classList.add('opacity-100'); }, 10);
         }
         function closeImgPreview() { 
@@ -1394,7 +1439,6 @@
             document.getElementById('previewImgTarget').style.transform = `scale(${currentZoom})`;
         }
 
-        // --- Image Compressor ---
         function compressImage(file) {
             return new Promise((resolve) => {
                 if (!file) { resolve(''); return; }
@@ -1415,7 +1459,6 @@
                 };
             });
         }
-
 
         // ==========================================
         // ANALYZE DATA LOGIC
@@ -1454,22 +1497,26 @@
             e.preventDefault();
             const btn = document.querySelector('#btnSubmitAz'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
             
-            const newData = {
-                id: editingAzId || Date.now(), 
-                tanggal: document.getElementById('az_form_tgl').value,
-                store: document.getElementById('az_form_store').value,
-                stockAwal: parseFloat(document.getElementById('az_stock_awal').value) || 0,
-                usage: parseFloat(document.getElementById('az_usage').value) || 0,
-                justify: document.getElementById('az_justify').value
-            };
+            try {
+                const newData = {
+                    id: editingAzId || Date.now(), 
+                    tanggal: document.getElementById('az_form_tgl').value,
+                    store: document.getElementById('az_form_store').value,
+                    stockAwal: parseFloat(document.getElementById('az_stock_awal').value) || 0,
+                    usage: parseFloat(document.getElementById('az_usage').value) || 0,
+                    justify: document.getElementById('az_justify').value
+                };
 
-            callAPI('saveAnalyzeData', newData).then(res => {
+                const res = await callAPI('saveAnalyzeData', newData);
                 btn.innerHTML = orig; btn.disabled = false;
                 if(res.success) { 
                     refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditAnalyze(); 
                 }
-                else Swal.fire('Error', 'Gagal menyimpan analisa.', 'error');
-            });
+                else Swal.fire('Error', res.message || 'Gagal menyimpan analisa.', 'error');
+            } catch (err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan koneksi ke server.', 'error');
+            }
         }
 
         function cancelEditAnalyze() {
@@ -1527,10 +1574,14 @@
             document.getElementById('az_sum_prod').innerText = globCalc.sisaProd.toLocaleString('id-ID');
             document.getElementById('az_sum_noodle').innerText = globCalc.sisaNoodle.toLocaleString('id-ID');
 
+            // Trigger update untuk preview form kalkulasi analisa
+            updateAnalyzePreview();
+
             // 2. Update Table
             let dataAz = APP_DATA.analyzeData.filter(d => {
                 let m1 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
-                let m2 = !filterDate || d.tanggal === filterDate;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m2 = !filterDate || safeDate === filterDate;
                 return m1 && m2;
             });
             dataAz.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
@@ -1543,8 +1594,9 @@
                 let acts = ``;
                 if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
 
-                // Perform Dynamic Calculation for Table Display
-                let c = getDailyCalculations(d.tanggal, d.store);
+                let safeDate = getSafeDateString(d.tanggal);
+                let c = getDailyCalculations(safeDate, d.store);
+                
                 let actualUsage = d.stockAwal + c.totalIn - c.stockAkhir - c.susut;
                 let selisih = d.usage - actualUsage;
 
@@ -1554,7 +1606,7 @@
                 else if(selisih > 0) { selisihCls = "text-emerald-600 bg-emerald-50 border-emerald-200 font-bold"; selisihTxt = "+" + selisihTxt; }
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50 text-xs">
-                    <td class="px-4 py-3 font-semibold text-slate-700">${d.tanggal}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-700">${safeDate}</td>
                     <td class="px-4 py-3 font-semibold text-slate-700">${d.store}</td>
                     <td class="px-4 py-3 font-bold text-indigo-600">Cabe</td>
                     <td class="px-4 py-3 text-right font-medium">${d.stockAwal.toLocaleString('id-ID')}</td>
@@ -1574,73 +1626,102 @@
         // ==========================================
         // RECEIVE NOODLE LOGIC
         // ==========================================
-
         async function submitReceiveNoodle(e) {
             e.preventDefault();
             const btn = document.querySelector('#btnSubmitRn'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
-            const fileBase64 = await compressImage(document.getElementById('rn_foto').files[0]);
             
-            const newData = {
-                id: editingRnId || Date.now(), 
-                tanggal: new Date().toISOString().split('T')[0], jam: new Date().toTimeString().split(' ')[0].substring(0,5),
-                petugas: document.getElementById('rn_petugas').value, 
-                store: document.getElementById('rn_store').value,
-                crewProd: document.getElementById('rn_crew_prod').value,
-                crewNoodle: document.getElementById('rn_crew_noodle').value,
-                qty: parseFloat(document.getElementById('rn_qty').value),
-                foto: fileBase64
-            };
+            try {
+                const fileInput = document.getElementById('rn_foto');
+                let foto = '';
+                if (fileInput.files.length > 0) {
+                    foto = await compressImage(fileInput.files[0]);
+                }
 
-            if (editingRnId) {
-                const idx = APP_DATA.receiveNoodle.findIndex(x => x.id === editingRnId);
-                if(idx !== -1 && !fileBase64) newData.foto = APP_DATA.receiveNoodle[idx].foto;
-            }
+                const newData = {
+                    id: editingRnId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('rn_petugas').value, 
+                    store: document.getElementById('rn_store').value,
+                    crewProd: document.getElementById('rn_crew_prod').value,
+                    crewNoodle: document.getElementById('rn_crew_noodle').value,
+                    qty: parseFloat(document.getElementById('rn_qty').value) || 0,
+                    foto: foto
+                };
 
-            callAPI('saveReceiveNoodle', newData).then(res => {
+                if (editingRnId) {
+                    const idx = APP_DATA.receiveNoodle.findIndex(x => x.id === editingRnId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.receiveNoodle[idx].foto;
+                }
+
+                const res = await callAPI('saveReceiveNoodle', newData);
                 btn.innerHTML = orig; btn.disabled = false;
-                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditNoodle('rn'); }
-                else Swal.fire('Error', 'Gagal menyimpan.', 'error');
-            });
+                
+                if(res.success) { 
+                    refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditNoodle('rn'); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            } catch (err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan saat menyimpan data.', 'error');
+            }
         }
 
         async function submitStockAkhirNoodle(e) {
             e.preventDefault();
             const btn = document.querySelector('#btnSubmitSan'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
-            const fileBase64 = await compressImage(document.getElementById('san_foto').files[0]);
             
-            const newData = {
-                id: editingSanId || Date.now(), 
-                tanggal: new Date().toISOString().split('T')[0], jam: new Date().toTimeString().split(' ')[0].substring(0,5),
-                petugas: document.getElementById('san_petugas').value, 
-                store: document.getElementById('san_store').value,
-                crewNoodle: document.getElementById('san_crew_noodle').value,
-                qty: parseFloat(document.getElementById('san_qty').value),
-                foto: fileBase64
-            };
+            try {
+                const fileInput = document.getElementById('san_foto');
+                let foto = '';
+                if (fileInput.files.length > 0) {
+                    foto = await compressImage(fileInput.files[0]);
+                }
+                
+                const newData = {
+                    id: editingSanId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('san_petugas').value, 
+                    store: document.getElementById('san_store').value,
+                    crewNoodle: document.getElementById('san_crew_noodle').value,
+                    qty: parseFloat(document.getElementById('san_qty').value) || 0,
+                    foto: foto
+                };
 
-            if (editingSanId) {
-                const idx = APP_DATA.stockAkhirNoodle.findIndex(x => x.id === editingSanId);
-                if(idx !== -1 && !fileBase64) newData.foto = APP_DATA.stockAkhirNoodle[idx].foto;
-            }
+                if (editingSanId) {
+                    const idx = APP_DATA.stockAkhirNoodle.findIndex(x => x.id === editingSanId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.stockAkhirNoodle[idx].foto;
+                }
 
-            callAPI('saveStockAkhirNoodle', newData).then(res => {
+                const res = await callAPI('saveStockAkhirNoodle', newData);
                 btn.innerHTML = orig; btn.disabled = false;
-                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditNoodle('san'); }
-                else Swal.fire('Error', 'Gagal menyimpan.', 'error');
-            });
+                
+                if(res.success) { 
+                    refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditNoodle('san'); 
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+                }
+            } catch (err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan saat menyimpan data.', 'error');
+            }
         }
 
         function cancelEditNoodle(type) {
             if(type === 'rn') {
                 editingRnId = null; document.getElementById('formReceiveNoodle').reset();
                 document.getElementById('btnSubmitRn').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelRn').classList.add('hidden');
-                document.getElementById('rn_petugas').value = currentUser.name;
-                if(currentUser.role !== 'Admin') document.getElementById('rn_store').value = currentUser.store;
+                if(currentUser) {
+                    document.getElementById('rn_petugas').value = currentUser.name;
+                    if(currentUser.role !== 'Admin') document.getElementById('rn_store').value = currentUser.store;
+                }
             } else if(type === 'san') {
                 editingSanId = null; document.getElementById('formStockAkhirNoodle').reset();
                 document.getElementById('btnSubmitSan').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelSan').classList.add('hidden');
-                document.getElementById('san_petugas').value = currentUser.name;
-                if(currentUser.role !== 'Admin') document.getElementById('san_store').value = currentUser.store;
+                if(currentUser) {
+                    document.getElementById('san_petugas').value = currentUser.name;
+                    if(currentUser.role !== 'Admin') document.getElementById('san_store').value = currentUser.store;
+                }
             }
         }
 
@@ -1709,16 +1790,13 @@
             let dataSan = APP_DATA.stockAkhirNoodle.filter(d => {
                 let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crewNoodle||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
                 let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
-                
-                let safeDate = '-';
-                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                let safeDate = getSafeDateString(d.tanggal);
                 
                 let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
                 return m1 && m2 && m3 && m4;
             });
             dataSan.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
             
-            // Render Tabel Sisa Level
             document.getElementById('tabelStockAkhirInfo').innerText = `Menampilkan ${dataSan.length} data sisa`;
             if(dataSan.length === 0) { tbodySan.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa level</td></tr>`; }
             else {
@@ -1727,9 +1805,8 @@
                     let acts = ``;
                     if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
 
-                    let safeDate = '-'; let safeTime = '-';
-                    if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
-                    if (d.jam) { let jStr = String(d.jam); if (jStr.includes('GMT') || jStr.includes('T')) { let j = new Date(jStr); if (!isNaN(j.getTime())) safeTime = String(j.getHours()).padStart(2, '0') + ':' + String(j.getMinutes()).padStart(2, '0'); } else { let m = jStr.match(/\d{2}:\d{2}/); safeTime = m ? m[0] : jStr.substring(0, 5); } }
+                    let safeDate = getSafeDateString(d.tanggal);
+                    let safeTime = String(d.jam || '').substring(0, 5);
 
                     return `<tr class="hover:bg-teal-50/30 border-b border-slate-50">
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
@@ -1747,11 +1824,7 @@
             let dataSanSummary = APP_DATA.stockAkhirNoodle;
             if(activeStoreFilter !== 'All') dataSanSummary = dataSanSummary.filter(d => d.store === activeStoreFilter);
             if(filterDateAkhir) {
-                dataSanSummary = dataSanSummary.filter(d => {
-                    let safeDate = '-';
-                    if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
-                    return safeDate === filterDateAkhir;
-                });
+                dataSanSummary = dataSanSummary.filter(d => getSafeDateString(d.tanggal) === filterDateAkhir);
             }
             let totalSan = dataSanSummary.reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
             document.getElementById('stockAkhirTotalGr').innerHTML = `${totalSan.toLocaleString('id-ID')} <span class="text-xl font-medium text-slate-400">gr</span>`;
@@ -1760,9 +1833,7 @@
             let dataRn = APP_DATA.receiveNoodle.filter(d => {
                 let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crewProd||'').toLowerCase().includes(search) || (d.crewNoodle||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
                 let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
-                
-                let safeDate = '-';
-                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
+                let safeDate = getSafeDateString(d.tanggal);
                 
                 let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
                 return m1 && m2 && m3 && m4;
@@ -1779,9 +1850,8 @@
                 let acts = ``;
                 if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
 
-                let safeDate = '-'; let safeTime = '-';
-                if (d.tanggal) { let t = new Date(d.tanggal); if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA'); else safeDate = String(d.tanggal).substring(0, 10); }
-                if (d.jam) { let jStr = String(d.jam); if (jStr.includes('GMT') || jStr.includes('T')) { let j = new Date(jStr); if (!isNaN(j.getTime())) safeTime = String(j.getHours()).padStart(2, '0') + ':' + String(j.getMinutes()).padStart(2, '0'); } else { let m = jStr.match(/\d{2}:\d{2}/); safeTime = m ? m[0] : jStr.substring(0, 5); } }
+                let safeDate = getSafeDateString(d.tanggal);
+                let safeTime = String(d.jam || '').substring(0, 5);
 
                 let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
 
@@ -1797,7 +1867,6 @@
             }).join('');
         }
 
-
         // ==========================================
         // CABE PROCESS & SISA CABE GILING LOGIC
         // ==========================================
@@ -1805,8 +1874,8 @@
             const start = document.getElementById('filterStart').value; const end = document.getElementById('filterEnd').value; const store = document.getElementById('filterStore').value;
             let fd = APP_DATA.cabeProcess;
             if(store !== 'All') fd = fd.filter(d => d.store === store);
-            if(start) fd = fd.filter(d => d.tanggal >= start);
-            if(end) fd = fd.filter(d => d.tanggal <= end);
+            if(start) fd = fd.filter(d => getSafeDateString(d.tanggal) >= start);
+            if(end) fd = fd.filter(d => getSafeDateString(d.tanggal) <= end);
             
             let st = {}; APP_DATA.stores.forEach(s => st[s.name] = 0); let totM = 0;
             fd.forEach(d => { if(st[d.store] !== undefined) st[d.store] += d.susut; totM += d.susut; });
@@ -1860,13 +1929,7 @@
             
             let wD = [0,0,0,0];
             data.forEach(d => { 
-                let safeDate = '-';
-                if (d.tanggal) {
-                    let t = new Date(d.tanggal);
-                    if (!isNaN(t.getTime())) safeDate = t.toLocaleDateString('en-CA');
-                    else safeDate = String(d.tanggal).substring(0, 10);
-                }
-                
+                let safeDate = getSafeDateString(d.tanggal);
                 if(safeDate !== '-') {
                     let dy = parseInt(safeDate.split('-')[2]); 
                     if(!isNaN(dy)) {
@@ -1877,7 +1940,785 @@
             charts.c4 = new Chart(document.getElementById('chartSusutWeekly'), { type: 'bar', data: { labels: ['W1','W2','W3','W4'], datasets: [{ label: 'Susut Mingguan', data: wD, backgroundColor: '#10b981', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales:{x:{grid:{display:false}}} } });
         }
 
-        // --- Settings Management ---
+        function updateProcessSummaries(dataProcess) {
+            let totalTerpakai = 0, susutDaily = 0, susutWeekly = 0, susutMonthly = 0;
+            let today = new Date().toLocaleDateString('en-CA');
+            let selW = document.getElementById('weekFilter').value; 
+            
+            dataProcess.forEach(d => {
+                let dDate = getSafeDateString(d.tanggal);
+                totalTerpakai += (d.before || 0);
+                
+                if(dDate === today) susutDaily += (d.susut || 0);
+                
+                let dayNum = parseInt(dDate.split('-')[2]);
+                if(!isNaN(dayNum)) {
+                    if(selW === 'W1' && dayNum <= 7) susutWeekly += (d.susut || 0);
+                    else if(selW === 'W2' && dayNum > 7 && dayNum <= 14) susutWeekly += (d.susut || 0);
+                    else if(selW === 'W3' && dayNum > 14 && dayNum <= 21) susutWeekly += (d.susut || 0);
+                    else if(selW === 'W4' && dayNum > 21) susutWeekly += (d.susut || 0);
+                }
+                
+                let currMonth = today.substring(0, 7);
+                if(dDate.startsWith(currMonth)) susutMonthly += (d.susut || 0);
+            });
+            
+            if(document.getElementById('sumCabeTerpakai')) document.getElementById('sumCabeTerpakai').innerText = totalTerpakai.toLocaleString('id-ID') + ' gr';
+            if(document.getElementById('sumCabeResep')) document.getElementById('sumCabeResep').innerHTML = '<i class="fas fa-utensils mr-1"></i> ' + (totalTerpakai/3000).toFixed(2) + ' Resep';
+            if(document.getElementById('sumSusutDaily')) document.getElementById('sumSusutDaily').innerText = susutDaily.toLocaleString('id-ID') + ' gr';
+            if(document.getElementById('sumSusutWeekly')) document.getElementById('sumSusutWeekly').innerText = susutWeekly.toLocaleString('id-ID') + ' gr';
+            if(document.getElementById('sumSusutMonthly')) document.getElementById('sumSusutMonthly').innerText = susutMonthly.toLocaleString('id-ID') + ' gr';
+        }
+
+        function calcSusut() {
+            let b = parseFloat(document.getElementById('cb_before').value) || 0;
+            let a = parseFloat(document.getElementById('cb_after').value) || 0;
+            let susut = b - a;
+            let el = document.getElementById('cb_susut_box');
+            el.innerText = susut + ' gr';
+            
+            if (b > 0 && a > 0) {
+                el.className = susut < 0 
+                    ? "w-full modern-input bg-rose-50 px-4 py-3.5 text-xl font-bold text-center text-rose-600 border-dashed border-2 border-rose-200" 
+                    : "w-full modern-input bg-emerald-50 px-4 py-3.5 text-xl font-bold text-center text-emerald-600 border-dashed border-2 border-emerald-200";
+            } else {
+                el.className = "w-full modern-input bg-slate-100 px-4 py-3.5 text-xl font-bold text-center text-slate-400 border-dashed border-2";
+            }
+        }
+
+        async function submitCabeProcess(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitForm'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+            
+            try {
+                let fotoBefore = ''; let fotoAfter = '';
+                if(document.getElementById('cb_foto_before').files.length > 0) fotoBefore = await compressImage(document.getElementById('cb_foto_before').files[0]);
+                if(document.getElementById('cb_foto_after').files.length > 0) fotoAfter = await compressImage(document.getElementById('cb_foto_after').files[0]);
+
+                let b = parseFloat(document.getElementById('cb_before').value) || 0;
+                let a = parseFloat(document.getElementById('cb_after').value) || 0;
+
+                const newData = {
+                    id: editingId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('cb_petugas').value, 
+                    crew: document.getElementById('cb_crew').value,
+                    store: document.getElementById('cb_store').value,
+                    batch: document.getElementById('cb_batch').value,
+                    before: b, after: a, susut: b - a,
+                    keterangan: document.getElementById('cb_ket').value,
+                    fotoBefore: fotoBefore, fotoAfter: fotoAfter
+                };
+
+                if (editingId) {
+                    const idx = APP_DATA.cabeProcess.findIndex(x => x.id === editingId);
+                    if(idx !== -1) {
+                        if(!fotoBefore) newData.fotoBefore = APP_DATA.cabeProcess[idx].fotoBefore;
+                        if(!fotoAfter) newData.fotoAfter = APP_DATA.cabeProcess[idx].fotoAfter;
+                    }
+                }
+
+                const res = await callAPI('saveCabeProcess', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEdit(); 
+                }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch(err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Gagal memproses data.', 'error');
+            }
+        }
+
+        async function submitCabeSisa(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitSisa'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+            
+            try {
+                let foto = '';
+                if(document.getElementById('sisa_foto').files.length > 0) foto = await compressImage(document.getElementById('sisa_foto').files[0]);
+
+                const newData = {
+                    id: editingSisaId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('sisa_petugas').value, 
+                    crew: document.getElementById('sisa_crew').value,
+                    store: document.getElementById('sisa_store').value,
+                    qty: parseFloat(document.getElementById('sisa_qty').value) || 0,
+                    foto: foto
+                };
+
+                if (editingSisaId) {
+                    const idx = APP_DATA.cabeSisa.findIndex(x => x.id === editingSisaId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeSisa[idx].foto;
+                }
+
+                const res = await callAPI('saveCabeSisa', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { 
+                    refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditSisa(); 
+                }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch(err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Gagal memproses data.', 'error');
+            }
+        }
+
+        function renderTableCabe() {
+            if(!APP_DATA.cabeProcess) APP_DATA.cabeProcess = [];
+            const tbody = document.getElementById('tabelCabeBody');
+            
+            const search = document.getElementById('searchCabe').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterStart').value; 
+            const filterEnd = document.getElementById('tabelFilterEnd').value;
+            const filterStore = document.getElementById('tabelFilterStore').value;
+            
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            let activeStoreFilter = filterStore;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
+
+            let dataProcess = APP_DATA.cabeProcess.filter(d => {
+                let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crew||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
+                let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+
+            dataProcess.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            
+            updateProcessSummaries(dataProcess);
+            
+            document.getElementById('tabelCabeInfo').innerText = `Menampilkan ${dataProcess.length} data proses`;
+            if(dataProcess.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat proses</td></tr>`; return; }
+
+            tbody.innerHTML = dataProcess.map(d => {
+                let acts = ``;
+                if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                let safeDate = getSafeDateString(d.tanggal);
+                let safeTime = String(d.jam || '').substring(0, 5);
+
+                let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
+
+                return `<tr class="hover:bg-slate-50 border-b border-slate-50">
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
+                    <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.before.toLocaleString('id-ID')}</span></td>
+                    <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.after.toLocaleString('id-ID')}</span></td>
+                    <td class="px-6 py-3 text-center"><span class="font-bold ${susutCls}">${d.susut.toLocaleString('id-ID')}</span></td>
+                    <td class="px-6 py-3 text-center">${acts}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderTableSisa() {
+            if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
+            const tbody = document.getElementById('tabelSisaBody');
+            
+            const search = document.getElementById('searchCabe').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterStart').value; 
+            const filterEnd = document.getElementById('tabelFilterEnd').value;
+            const filterStore = document.getElementById('tabelFilterStore').value;
+            
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            let activeStoreFilter = filterStore;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
+
+            let dataSisa = APP_DATA.cabeSisa.filter(d => {
+                let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crew||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
+                let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+
+            dataSisa.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            
+            document.getElementById('tabelSisaInfo').innerText = `Menampilkan ${dataSisa.length} data sisa`;
+            if(dataSisa.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa giling</td></tr>`; return; }
+
+            tbody.innerHTML = dataSisa.map(d => {
+                let imgF = d.foto ? `<i class="fas fa-image text-orange-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
+                let acts = ``;
+                if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                let safeDate = getSafeDateString(d.tanggal);
+                let safeTime = String(d.jam || '').substring(0, 5);
+
+                return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
+                    <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-orange-600 bg-orange-50 border border-orange-100">${d.qty.toLocaleString('id-ID')}</span></td>
+                    <td class="px-6 py-3 text-center">${imgF}</td>
+                    <td class="px-6 py-3 text-center">${acts}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderSisaData() {
+            let filterDateSisa = document.getElementById('filterDateSisa').value;
+            let filterStore = currentUser && currentUser.store !== 'All' ? currentUser.store : 'All'; 
+
+            let dataSisaSummary = APP_DATA.cabeSisa;
+            if(filterStore !== 'All') dataSisaSummary = dataSisaSummary.filter(d => d.store === filterStore);
+            if(filterDateSisa) {
+                dataSisaSummary = dataSisaSummary.filter(d => getSafeDateString(d.tanggal) === filterDateSisa);
+            }
+            
+            let totalSisa = dataSisaSummary.reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
+            document.getElementById('sisaTotalGr').innerHTML = `${totalSisa.toLocaleString('id-ID')} <span class="text-xl font-medium text-slate-400">gr</span>`;
+            document.getElementById('sisaTotalResep').innerHTML = `${(totalSisa/3000).toFixed(2)} <span class="text-xl font-medium text-orange-400/70">Resep</span>`;
+            
+            filterDashboard();
+        }
+
+        function cancelEdit() {
+            editingId = null; document.getElementById('formCabe').reset();
+            document.getElementById('btnSubmitForm').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan Data'; document.getElementById('btnCancelEdit').classList.add('hidden');
+            if(currentUser) {
+                document.getElementById('cb_petugas').value = currentUser.name;
+                if(currentUser.role !== 'Admin') document.getElementById('cb_store').value = currentUser.store;
+            }
+            document.getElementById('cb_susut_box').innerText = '0 gr';
+            document.getElementById('cb_susut_box').className = "w-full modern-input bg-slate-100 px-4 py-3.5 text-xl font-bold text-center text-slate-400 border-dashed border-2";
+        }
+
+        function cancelEditSisa() {
+            editingSisaId = null; document.getElementById('formSisa').reset();
+            document.getElementById('btnSubmitSisa').innerHTML = '<i class="fas fa-save"></i> Simpan Sisa Cabe'; document.getElementById('btnCancelSisa').classList.add('hidden');
+            if(currentUser) {
+                document.getElementById('sisa_petugas').value = currentUser.name;
+                if(currentUser.role !== 'Admin') document.getElementById('sisa_store').value = currentUser.store;
+            }
+        }
+
+        function deleteCabeProcess(id) {
+            Swal.fire({ title: 'Hapus Data?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if (r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteCabeProcess', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+        
+        function deleteCabeSisa(id) {
+            Swal.fire({ title: 'Hapus Sisa?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if (r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteCabeSisa', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function editCabeProcess(id) {
+            const d = APP_DATA.cabeProcess.find(x => x.id === id);
+            if(d) {
+                editingId = id; 
+                document.getElementById('cb_store').value = d.store; 
+                document.getElementById('cb_batch').value = d.batch; 
+                document.getElementById('cb_crew').value = d.crew; 
+                document.getElementById('cb_before').value = d.before; 
+                document.getElementById('cb_after').value = d.after; 
+                document.getElementById('cb_ket').value = d.keterangan || ''; 
+                calcSusut();
+                
+                if(document.getElementById('formCabeBody').style.display === 'none') toggleElement('formCabeBody', 'iconFormCabe');
+                document.getElementById('btnSubmitForm').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelEdit').classList.remove('hidden');
+                document.getElementById('cb_foto_before').required = false; document.getElementById('cb_foto_after').required = false;
+                document.getElementById('formCabeContainer').scrollIntoView();
+            }
+        }
+
+        function editCabeSisa(id) {
+            const d = APP_DATA.cabeSisa.find(x => x.id === id);
+            if(d) {
+                editingSisaId = id; 
+                document.getElementById('sisa_store').value = d.store; 
+                document.getElementById('sisa_crew').value = d.crew; 
+                document.getElementById('sisa_qty').value = d.qty; 
+                
+                if(document.getElementById('formSisaBody').style.display === 'none') toggleElement('formSisaBody', 'iconFormSisa');
+                document.getElementById('btnSubmitSisa').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelSisa').classList.remove('hidden');
+                document.getElementById('sisa_foto').required = false; document.getElementById('formSisaContainer').scrollIntoView();
+            }
+        }
+
+        // ==========================================
+        // RECEIVE STOCKER LOGIC
+        // ==========================================
+        function calcResepBelanja() {
+            let qty = parseFloat(document.getElementById('bc_qty').value) || 0;
+            let resep = (qty / 3000).toFixed(2);
+            document.getElementById('bc_resep').value = resep + ' Resep';
+        }
+
+        async function submitCabeDatang(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitCd'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+            
+            try {
+                let foto = '';
+                if(document.getElementById('cd_foto').files.length > 0) foto = await compressImage(document.getElementById('cd_foto').files[0]);
+
+                const newData = {
+                    id: editingCdId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('cd_petugas').value, 
+                    store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
+                    qty: parseFloat(document.getElementById('cd_qty').value) || 0,
+                    foto: foto
+                };
+                if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
+
+                if (editingCdId) {
+                    const idx = APP_DATA.cabeDatang.findIndex(x => x.id === editingCdId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeDatang[idx].foto;
+                }
+
+                const res = await callAPI('saveCabeDatang', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditReceive('cd'); }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch(err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan koneksi ke server.', 'error');
+            }
+        }
+
+        async function submitBelanjaCabe(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitBc'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+            
+            try {
+                let foto = '';
+                if(document.getElementById('bc_foto').files.length > 0) foto = await compressImage(document.getElementById('bc_foto').files[0]);
+
+                const newData = {
+                    id: editingBcId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('bc_petugas').value, 
+                    crew: document.getElementById('bc_crew').value,
+                    store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
+                    qty: parseFloat(document.getElementById('bc_qty').value) || 0,
+                    foto: foto
+                };
+                if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
+
+                if (editingBcId) {
+                    const idx = APP_DATA.belanjaCabe.findIndex(x => x.id === editingBcId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.belanjaCabe[idx].foto;
+                }
+
+                const res = await callAPI('saveBelanjaCabe', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditReceive('bc'); }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch(err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan koneksi ke server.', 'error');
+            }
+        }
+
+        async function submitSisaUtuh(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitSu'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+            
+            try {
+                let foto = '';
+                if(document.getElementById('su_foto').files.length > 0) foto = await compressImage(document.getElementById('su_foto').files[0]);
+
+                const newData = {
+                    id: editingSuId || Date.now(), 
+                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    petugas: document.getElementById('su_petugas').value, 
+                    store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
+                    qty: parseFloat(document.getElementById('su_qty').value) || 0,
+                    foto: foto
+                };
+                if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
+
+                if (editingSuId) {
+                    const idx = APP_DATA.cabeUtuhSisa.findIndex(x => x.id === editingSuId);
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeUtuhSisa[idx].foto;
+                }
+
+                const res = await callAPI('saveCabeUtuhSisa', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditReceive('su'); }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch(err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan koneksi ke server.', 'error');
+            }
+        }
+
+        function cancelEditReceive(type) {
+            if(type === 'cd') {
+                editingCdId = null; document.getElementById('formCabeDatang').reset();
+                document.getElementById('btnSubmitCd').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelCd').classList.add('hidden');
+                if(currentUser) document.getElementById('cd_petugas').value = currentUser.name;
+            } else if(type === 'bc') {
+                editingBcId = null; document.getElementById('formBelanjaCabe').reset();
+                document.getElementById('btnSubmitBc').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelBc').classList.add('hidden');
+                if(currentUser) document.getElementById('bc_petugas').value = currentUser.name;
+            } else if(type === 'su') {
+                editingSuId = null; document.getElementById('formSisaUtuh').reset();
+                document.getElementById('btnSubmitSu').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelSu').classList.add('hidden');
+                if(currentUser) document.getElementById('su_petugas').value = currentUser.name;
+            }
+        }
+        
+        function deleteReceiveData(type, id) {
+            Swal.fire({ title: 'Hapus Data?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if (r.isConfirmed) {
+                    Swal.showLoading();
+                    let act = type === 'cd' ? 'deleteCabeDatang' : type === 'bc' ? 'deleteBelanjaCabe' : 'deleteCabeUtuhSisa';
+                    callAPI(act, id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function editReceiveData(type, id) {
+            if(type === 'cd') {
+                const d = APP_DATA.cabeDatang.find(x => x.id === id);
+                if(d) {
+                    editingCdId = id; document.getElementById('cd_qty').value = d.qty;
+                    if(document.getElementById('formCabeDatangBody').style.display === 'none') toggleElement('formCabeDatangBody', 'iconFormCabeDatang');
+                    document.getElementById('btnSubmitCd').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelCd').classList.remove('hidden');
+                    document.getElementById('cd_foto').required = false; document.getElementById('formCabeDatangContainer').scrollIntoView();
+                }
+            } else if(type === 'bc') {
+                const d = APP_DATA.belanjaCabe.find(x => x.id === id);
+                if(d) {
+                    editingBcId = id; document.getElementById('bc_crew').value = d.crew; document.getElementById('bc_qty').value = d.qty; calcResepBelanja();
+                    if(document.getElementById('formBelanjaCabeBody').style.display === 'none') toggleElement('formBelanjaCabeBody', 'iconFormBelanjaCabe');
+                    document.getElementById('btnSubmitBc').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelBc').classList.remove('hidden');
+                    document.getElementById('bc_foto').required = false; document.getElementById('formBelanjaCabeContainer').scrollIntoView();
+                }
+            } else if(type === 'su') {
+                const d = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
+                if(d) {
+                    editingSuId = id; document.getElementById('su_qty').value = d.qty;
+                    if(document.getElementById('formSisaUtuhBody').style.display === 'none') toggleElement('formSisaUtuhBody', 'iconFormSisaUtuh');
+                    document.getElementById('btnSubmitSu').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelSu').classList.remove('hidden');
+                    document.getElementById('su_foto').required = false; document.getElementById('formSisaUtuhContainer').scrollIntoView();
+                }
+            }
+        }
+
+        function renderReceiveStockerData() {
+            if(!APP_DATA.cabeDatang) APP_DATA.cabeDatang = [];
+            if(!APP_DATA.belanjaCabe) APP_DATA.belanjaCabe = [];
+            if(!APP_DATA.cabeUtuhSisa) APP_DATA.cabeUtuhSisa = [];
+
+            const search = document.getElementById('searchReceive').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterRecStart').value; 
+            const filterEnd = document.getElementById('tabelFilterRecEnd').value;
+            const filterStore = document.getElementById('tabelFilterRecStore').value;
+            const filterDateUtuhSisa = document.getElementById('filterDateUtuhSisa').value;
+            
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            let activeStoreFilter = filterStore;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
+
+            // Update Summary Card
+            let dataSuSummary = APP_DATA.cabeUtuhSisa;
+            if(activeStoreFilter !== 'All') dataSuSummary = dataSuSummary.filter(d => d.store === activeStoreFilter);
+            if(filterDateUtuhSisa) {
+                dataSuSummary = dataSuSummary.filter(d => getSafeDateString(d.tanggal) === filterDateUtuhSisa);
+            }
+            let totalSu = dataSuSummary.reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
+            document.getElementById('sisaUtuhTotalGr').innerHTML = `${totalSu.toLocaleString('id-ID')} <span class="text-xl font-medium text-slate-400">gr</span>`;
+
+            // Merge & Render Table 1: Receive (Datang + Belanja)
+            let mergedReceive = [
+                ...APP_DATA.cabeDatang.map(d => ({...d, rType: 'cd', label: 'Cabe Datang', color: 'blue'})),
+                ...APP_DATA.belanjaCabe.map(d => ({...d, rType: 'bc', label: 'Belanja Cabe', color: 'purple'}))
+            ];
+
+            let dataRec = mergedReceive.filter(d => {
+                let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crew||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
+                let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+
+            dataRec.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            
+            const tbodyRec = document.getElementById('tabelReceiveBody');
+            document.getElementById('tabelReceiveInfo').innerText = `Menampilkan ${dataRec.length} data`;
+            
+            if(dataRec.length === 0) { tbodyRec.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data</td></tr>`; }
+            else {
+                tbodyRec.innerHTML = dataRec.map(d => {
+                    let imgF = d.foto ? `<i class="fas fa-image text-${d.color}-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
+                    let acts = ``;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                    let safeDate = getSafeDateString(d.tanggal);
+                    let safeTime = String(d.jam || '').substring(0, 5);
+
+                    let crewInfo = d.crew ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span>` : '';
+
+                    return `<tr class="hover:bg-${d.color}-50/30 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-${d.color}-100 text-${d.color}-700">${d.label}</span></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${crewInfo}</td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
+                        <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800 text-base">${d.qty.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center">${imgF}</td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // Render Table 2: Sisa Utuh
+            let dataSu = APP_DATA.cabeUtuhSisa.filter(d => {
+                let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
+                let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+            dataSu.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+
+            const tbodySu = document.getElementById('tabelSisaUtuhBody');
+            document.getElementById('tabelSisaUtuhInfo').innerText = `Menampilkan ${dataSu.length} data`;
+            
+            if(dataSu.length === 0) { tbodySu.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa utuh</td></tr>`; }
+            else {
+                tbodySu.innerHTML = dataSu.map(d => {
+                    let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
+                    let acts = ``;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                    let safeDate = getSafeDateString(d.tanggal);
+                    let safeTime = String(d.jam || '').substring(0, 5);
+
+                    return `<tr class="hover:bg-cyan-50/30 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-100 text-cyan-700">Sisa Utuh</span></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
+                        <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-cyan-600 bg-cyan-50 border border-cyan-100">${d.qty.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center">${imgF}</td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // ==========================================
+        // KALIBRASI LOGIC
+        // ==========================================
+        function updateKalibrasiStd() {
+            const kat = document.getElementById('kal_kategori').value;
+            const levels = ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'];
+            
+            levels.forEach(lvl => {
+                const stdEl = document.getElementById(`std_${lvl}`);
+                if (stdEl && APP_DATA.settings && APP_DATA.settings.kalibrasi && APP_DATA.settings.kalibrasi[kat]) {
+                    stdEl.innerText = APP_DATA.settings.kalibrasi[kat][lvl] || "0";
+                }
+            });
+            evalKalibrasi();
+        }
+
+        function evalKalibrasi() {
+            const kat = document.getElementById('kal_kategori').value;
+            const levels = ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'];
+
+            levels.forEach(lvl => {
+                let rangeStr = "0";
+                if(APP_DATA.settings && APP_DATA.settings.kalibrasi && APP_DATA.settings.kalibrasi[kat] && APP_DATA.settings.kalibrasi[kat][lvl]) {
+                    rangeStr = APP_DATA.settings.kalibrasi[kat][lvl];
+                }
+
+                const inputs = document.querySelectorAll(`.kal-input-${lvl}`);
+                let allFilled = true;
+                let allPass = true;
+
+                inputs.forEach(inp => {
+                    const val = inp.value;
+                    if(val === "") {
+                        allFilled = false;
+                        inp.style.backgroundColor = "";
+                        inp.style.color = "";
+                    } else {
+                        if(isWithinRange(val, rangeStr)) {
+                            inp.style.backgroundColor = "#d1fae5"; 
+                            inp.style.color = "#065f46"; 
+                        } else {
+                            inp.style.backgroundColor = "#ffe4e6"; 
+                            inp.style.color = "#9f1239"; 
+                            allPass = false;
+                        }
+                    }
+                });
+
+                const statusEl = document.getElementById(`status_${lvl}`);
+                if(!allFilled) {
+                    statusEl.innerHTML = '<span class="text-slate-400">-</span>';
+                } else if(allPass) {
+                    statusEl.innerHTML = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded">LULUS</span>';
+                } else {
+                    statusEl.innerHTML = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded">GAGAL</span>';
+                }
+            });
+        }
+
+        async function submitKalibrasi(e) {
+            e.preventDefault();
+            const btn = document.querySelector('#btnSubmitKalibrasi'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>...'; btn.disabled = true;
+
+            const tglVal = document.getElementById('kal_tgl').value; 
+            const dateObj = new Date(tglVal);
+            // Pakai toLocaleDateString lokal agar tidak bergeser harinya
+            const tanggal = dateObj.toLocaleDateString('en-CA');
+            const jam = dateObj.toTimeString().split(' ')[0].substring(0,5);
+
+            const kat = document.getElementById('kal_kategori').value;
+            const levels = ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'];
+            let detailData = {};
+            let isAllLulus = true;
+
+            levels.forEach(lvl => {
+                let arr = [];
+                let rangeStr = APP_DATA.settings.kalibrasi[kat][lvl] || "0";
+                let allPassLvl = true;
+                
+                const inputs = document.querySelectorAll(`.kal-input-${lvl}`);
+                inputs.forEach((inp, i) => {
+                    let v = parseFloat(inp.value) || 0;
+                    arr.push(v);
+                    if(!isWithinRange(v, rangeStr)) {
+                        allPassLvl = false;
+                        isAllLulus = false;
+                    }
+                });
+                
+                detailData[lvl] = {
+                    acuan: rangeStr,
+                    data: arr,
+                    status: allPassLvl ? "LULUS" : "GAGAL"
+                };
+            });
+
+            const newData = {
+                id: editingKalibrasiId || Date.now(), 
+                tanggal: tanggal, jam: jam,
+                petugas: document.getElementById('kal_petugas').value, 
+                crew: document.getElementById('kal_crew').value,
+                store: document.getElementById('kal_store').value,
+                batch: document.getElementById('kal_batch').value,
+                kategori: kat,
+                status: isAllLulus ? "LULUS" : "GAGAL",
+                detail: detailData
+            };
+
+            try {
+                const res = await callAPI('saveKalibrasi', newData);
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) { refreshData(true); Swal.fire({icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false}); cancelEditKalibrasi(); }
+                else Swal.fire('Error', res.message || 'Gagal menyimpan.', 'error');
+            } catch (err) {
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.fire('Error', 'Kesalahan koneksi ke server.', 'error');
+            }
+        }
+
+        function cancelEditKalibrasi() {
+            editingKalibrasiId = null; 
+            document.getElementById('formKalibrasi').reset();
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('kal_tgl').value = now.toISOString().slice(0,16);
+            
+            document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Simpan Kalibrasi'; document.getElementById('btnCancelKalibrasi').classList.add('hidden');
+            if(currentUser) {
+                document.getElementById('kal_petugas').value = currentUser.name;
+                if(currentUser.role !== 'Admin') document.getElementById('kal_store').value = currentUser.store;
+            }
+            updateKalibrasiStd();
+        }
+        
+        function deleteKalibrasi(id) {
+            Swal.fire({ title: 'Hapus Kalibrasi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48' }).then((r) => {
+                if (r.isConfirmed) {
+                    Swal.showLoading();
+                    callAPI('deleteKalibrasi', id).then(res => {
+                        if(res.success) { refreshData(true); Swal.fire('Terhapus!', '', 'success'); }
+                        else { Swal.fire('Gagal!', res.message, 'error'); }
+                    });
+                }
+            });
+        }
+
+        function renderTableKalibrasi() {
+            if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
+            const tbody = document.getElementById('tabelKalBody');
+            
+            const search = document.getElementById('searchKalibrasi').value.toLowerCase();
+            const filterStart = document.getElementById('tabelFilterKalStart').value; 
+            const filterEnd = document.getElementById('tabelFilterKalEnd').value;
+            const filterStore = document.getElementById('tabelFilterKalStore').value;
+            
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            let activeStoreFilter = filterStore;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
+
+            let dataKal = APP_DATA.kalibrasi.filter(d => {
+                let m1 = (d.petugas||'').toLowerCase().includes(search) || (d.crew||'').toLowerCase().includes(search) || (d.store||'').toLowerCase().includes(search);
+                let m2 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let safeDate = getSafeDateString(d.tanggal);
+                let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
+                return m1 && m2 && m3 && m4;
+            });
+
+            dataKal.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            
+            document.getElementById('tabelKalInfo').innerText = `Menampilkan ${dataKal.length} data kalibrasi`;
+            if(dataKal.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; return; }
+
+            tbody.innerHTML = dataKal.map(d => {
+                let acts = ``;
+                if(isAdmin) acts += `<button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+
+                let safeDate = getSafeDateString(d.tanggal);
+                let safeTime = String(d.jam || '').substring(0, 5);
+
+                let statusBadge = d.status === 'LULUS' 
+                    ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-check-circle mr-1"></i> LULUS</span>` 
+                    : `<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-times-circle mr-1"></i> GAGAL</span>`;
+
+                return `<tr class="hover:bg-slate-50 border-b border-slate-50">
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
+                    <td class="px-6 py-3"><span class="font-bold text-primary uppercase text-xs">${d.kategori}</span></td>
+                    <td class="px-6 py-3 text-center">${statusBadge}</td>
+                    <td class="px-6 py-3 text-center">${acts}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ==========================================
+        // SETTINGS LOGIC
+        // ==========================================
         function saveStore(e) {
             e.preventDefault();
             const input = document.getElementById('storeNameInput').value.trim();
@@ -1978,7 +2819,6 @@
         function saveGramasiSettings() {
             const btn = document.getElementById('btnSaveGramasi'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
 
-            // Jangan menggunakan parseFloat di sini, agar "6-7" terbaca utuh sebagai string
             const kal = {
                 gacoan: { 
                     l1: document.getElementById('set_g_l1').value.trim() || "0", 
@@ -2011,7 +2851,6 @@
 
         function saveSystemSettings() {
             const btn = document.getElementById('btnSaveSys'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
-
             const logo = document.getElementById('set_logo').value; const copy = document.getElementById('set_copyright').value;
 
             callAPI('saveSettings', { logoApp: logo, copyright: copy }).then(res => {
@@ -2058,7 +2897,7 @@
             if(prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
         }
 
-        // --- Export Data ---
+        // --- Export Data Tools ---
         function exportExcel(tableId, filename) {
             const table = document.getElementById(tableId);
             if (!table) return;

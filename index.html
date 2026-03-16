@@ -154,7 +154,7 @@
             return strVal.substring(0, 10);
         }
 
-        // FUNGSI KALKULASI YANG DIPERBAIKI (DATE STRING MATCHING)
+        // FUNGSI KALKULASI
         function getDailyCalculations(date, storeName) {
             let filterMatch = d => {
                 let safeDate = getSafeDateString(d.tanggal);
@@ -1141,6 +1141,24 @@
     </div>
 
     <!-- Modals -->
+
+    <!-- Universal Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden">
+        <div class="absolute inset-0 modal-overlay" onclick="closeDetailModal()"></div>
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl m-4 relative z-10 flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="detailModalTitle"><i class="fas fa-info-circle text-sky-500"></i> Detail Data</h3>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex justify-center items-center rounded-lg hover:bg-slate-100 transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto text-sm" id="detailModalBody">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50">
+                <button onclick="closeDetailModal()" class="modern-btn bg-slate-500 hover:bg-slate-600 px-6 py-2 shadow-none text-white">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <!-- User Modal Form -->
     <div id="userModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
         <div class="absolute inset-0 modal-overlay" onclick="closeUserModal()"></div>
@@ -1224,7 +1242,7 @@
             const prevLogo = document.getElementById('previewLogoSetting');
             if (prevLogo) prevLogo.src = APP_DATA.settings.logoApp;
             
-            // Populate Batch dynamically to prevent document.write issues
+            // Populate Batch dynamically
             const batchOptions = Array.from({length: 20}, (_, i) => `<option value="Batch ${i+1}">Batch ${i+1}</option>`).join('');
             const batchSelects = ['cb_batch', 'kal_batch'];
             batchSelects.forEach(id => {
@@ -1298,14 +1316,10 @@
 
         function reloadActiveViews() {
             if(document.getElementById('page-dashboard').classList.contains('active')) filterDashboard();
-            
             if(document.getElementById('page-analyze-data').classList.contains('active')) {
-                updateAnalyzePreview();
-                renderAnalyzeData();
+                updateAnalyzePreview(); renderAnalyzeData();
             }
-            
             if(document.getElementById('page-receive-stocker').classList.contains('active')) renderReceiveStockerData();
-            
             if(document.getElementById('page-cabeprocess').classList.contains('active')) {
                 renderTableCabe(); renderTableSisa(); renderSisaData();
             }
@@ -1439,6 +1453,161 @@
             document.getElementById('previewImgTarget').style.transform = `scale(${currentZoom})`;
         }
 
+        // ==========================================
+        // FUNGSI VIEW DETAIL (BARU)
+        // ==========================================
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function viewDetail(type, id) {
+            let data = null;
+            let title = "Detail Data";
+            let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+
+            const addRow = (label, val) => `<div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${label}</span><span class="font-semibold text-slate-700">${val || '-'}</span></div>`;
+            const addFullRow = (label, val) => `<div class="col-span-1 md:col-span-2 bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${label}</span><span class="font-semibold text-slate-700">${val || '-'}</span></div>`;
+
+            if (type === 'analyze') {
+                data = APP_DATA.analyzeData.find(x => x.id === id);
+                title = "Detail Analisa Cabe";
+                if(data) {
+                    html += addRow('Tanggal', getSafeDateString(data.tanggal));
+                    html += addRow('Store', data.store);
+                    html += addRow('Stock Awal', data.stockAwal.toLocaleString('id-ID') + ' gr');
+                    html += addRow('Usage System', data.usage.toLocaleString('id-ID') + ' gr');
+                    html += addFullRow('Keterangan Justify', data.justify);
+                }
+            } else if (type === 'cd') {
+                data = APP_DATA.cabeDatang.find(x => x.id === id);
+                title = "Detail Cabe Datang";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas', data.petugas);
+                    html += addRow('Store', data.store);
+                    html += addRow('Qty', data.qty.toLocaleString('id-ID') + ' gr');
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'bc') {
+                data = APP_DATA.belanjaCabe.find(x => x.id === id);
+                title = "Detail Belanja Cabe";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas', data.petugas);
+                    html += addRow('Crew Prod (Handover)', data.crew);
+                    html += addRow('Store', data.store);
+                    html += addRow('Qty', data.qty.toLocaleString('id-ID') + ' gr');
+                    html += addRow('Estimasi Resep', (data.qty / 3000).toFixed(2) + ' Resep');
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'su') {
+                data = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
+                title = "Detail Sisa Cabe Utuh (Storage)";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas', data.petugas);
+                    html += addRow('Store', data.store);
+                    html += addRow('Qty', data.qty.toLocaleString('id-ID') + ' gr');
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'cp') {
+                data = APP_DATA.cabeProcess.find(x => x.id === id);
+                title = "Detail Proses Steam Cabe";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
+                    html += addRow('Store & Batch', data.store + ' / ' + data.batch);
+                    let susutCls = data.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
+                    html += addRow('Susut', `<span class="font-bold ${susutCls}">${data.susut.toLocaleString('id-ID')} gr</span>`);
+                    html += addRow('Before Process', data.before.toLocaleString('id-ID') + ' gr');
+                    html += addRow('After Steam', data.after.toLocaleString('id-ID') + ' gr');
+                    if(data.keterangan) html += addFullRow('Keterangan', data.keterangan);
+                    
+                    html += `<div class="col-span-1 md:col-span-2 mt-2 flex gap-4">`;
+                    if(data.fotoBefore) html += `<div><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Before</p><img src="${data.fotoBefore}" onclick="openImgPreview('${data.fotoBefore}')" class="w-32 h-32 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                    if(data.fotoAfter) html += `<div><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto After</p><img src="${data.fotoAfter}" onclick="openImgPreview('${data.fotoAfter}')" class="w-32 h-32 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                    html += `</div>`;
+                }
+            } else if (type === 'cs') {
+                data = APP_DATA.cabeSisa.find(x => x.id === id);
+                title = "Detail Sisa Cabe Giling";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
+                    html += addRow('Store', data.store);
+                    html += addRow('Qty Sisa', data.qty.toLocaleString('id-ID') + ' gr');
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'rn') {
+                data = APP_DATA.receiveNoodle.find(x => x.id === id);
+                title = "Detail Receive Noodle (Handover)";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas', data.petugas);
+                    html += addRow('Crew Prod (Menyerahkan)', data.crewProd);
+                    html += addRow('Crew Noodle (Menerima)', data.crewNoodle);
+                    html += addRow('Store', data.store);
+                    html += addRow('Qty Diterima', data.qty.toLocaleString('id-ID') + ' gr');
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'san') {
+                data = APP_DATA.stockAkhirNoodle.find(x => x.id === id);
+                title = "Detail Stock Akhir Noodle (Sisa Level)";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas', data.petugas);
+                    html += addRow('Crew Noodle', data.crewNoodle);
+                    html += addRow('Store', data.store);
+                    html += addFullRow('Qty Sisa', `<span class="font-bold text-teal-600 text-lg">${data.qty.toLocaleString('id-ID')} gr</span>`);
+                    if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
+                }
+            } else if (type === 'kal') {
+                data = APP_DATA.kalibrasi.find(x => x.id === id);
+                title = "Detail Kalibrasi Alat";
+                if(data) {
+                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
+                    html += addRow('Store & Batch', data.store + ' / ' + data.batch);
+                    html += addRow('Kategori Mie', `<span class="uppercase text-primary font-bold">${data.kategori}</span>`);
+                    let statusColor = data.status === 'LULUS' ? 'text-emerald-700 bg-emerald-100' : 'text-rose-700 bg-rose-100';
+                    html += addFullRow('Status Keseluruhan', `<span class="px-3 py-1 rounded font-bold ${statusColor}"><i class="fas ${data.status==='LULUS'?'fa-check-circle':'fa-times-circle'} mr-1"></i> ${data.status}</span>`);
+
+                    // Tabel Rincian Data Kalibrasi
+                    html += `</div><div class="mt-6 border border-slate-200 rounded-xl overflow-hidden shadow-sm"><div class="bg-slate-50 border-b border-slate-200 px-4 py-3"><h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Rincian Hasil Timbangan</h4></div><div class="overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200"><tr><th class="px-4 py-3">Level</th><th class="px-4 py-3">Acuan (gr)</th><th class="px-4 py-3">Hasil Timbangan 1 - 10 (gr)</th><th class="px-4 py-3">Status</th></tr></thead><tbody class="divide-y divide-slate-100">`;
+
+                    if(data.detail) {
+                        ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'].forEach(lvl => {
+                            if(data.detail[lvl]) {
+                                let dLvl = data.detail[lvl];
+                                let stColor = dLvl.status === 'LULUS' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-rose-600 bg-rose-50 border-rose-100';
+                                
+                                // Format array data timbangan
+                                let dataHtml = dLvl.data.map(v => {
+                                    let isOk = isWithinRange(v, dLvl.acuan);
+                                    let vCls = isOk ? 'text-slate-600 font-semibold' : 'text-rose-600 font-bold';
+                                    return `<span class="inline-block w-8 text-center ${vCls}">${v}</span>`;
+                                }).join('<span class="text-slate-300 mx-1">|</span>');
+
+                                html += `<tr class="hover:bg-slate-50/50 transition">
+                                    <td class="px-4 py-3 font-bold text-slate-700 uppercase">${lvl}</td>
+                                    <td class="px-4 py-3 text-primary font-bold">${dLvl.acuan}</td>
+                                    <td class="px-4 py-3">${dataHtml}</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold border ${stColor}">${dLvl.status}</span></td>
+                                </tr>`;
+                            }
+                        });
+                    }
+                    html += `</tbody></table></div>`;
+                }
+            }
+
+            if(type !== 'kal') html += `</div>`; // Tutup grid jika bukan kalibrasi (kalibrasi sudah ditutup di atas)
+
+            document.getElementById('detailModalTitle').innerHTML = `<i class="fas fa-info-circle text-sky-500"></i> ${title}`;
+            document.getElementById('detailModalBody').innerHTML = html;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
         function compressImage(file) {
             return new Promise((resolve) => {
                 if (!file) { resolve(''); return; }
@@ -1568,16 +1737,13 @@
             let activeStoreFilter = filterStore;
             if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
 
-            // 1. Update Global Summaries
             let globCalc = getDailyCalculations(filterDate, activeStoreFilter);
             document.getElementById('az_sum_storage').innerText = globCalc.sisaUtuh.toLocaleString('id-ID');
             document.getElementById('az_sum_prod').innerText = globCalc.sisaProd.toLocaleString('id-ID');
             document.getElementById('az_sum_noodle').innerText = globCalc.sisaNoodle.toLocaleString('id-ID');
 
-            // Trigger update untuk preview form kalkulasi analisa
             updateAnalyzePreview();
 
-            // 2. Update Table
             let dataAz = APP_DATA.analyzeData.filter(d => {
                 let m1 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
                 let safeDate = getSafeDateString(d.tanggal);
@@ -1591,8 +1757,8 @@
             if(dataAz.length === 0) { tbodyAz.innerHTML = `<tr><td colspan="13" class="text-center py-6 text-slate-400 font-medium">Belum ada data analisa tersimpan</td></tr>`; return; }
 
             tbodyAz.innerHTML = dataAz.map(d => {
-                let acts = ``;
-                if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                let acts = `<button onclick="viewDetail('analyze', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let c = getDailyCalculations(safeDate, d.store);
@@ -1802,8 +1968,9 @@
             else {
                 tbodySan.innerHTML = dataSan.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
-                    let acts = ``;
-                    if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                    
+                    let acts = `<button onclick="viewDetail('san', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
                     let safeTime = String(d.jam || '').substring(0, 5);
@@ -1820,7 +1987,7 @@
                 }).join('');
             }
             
-            // Update Summary Text (Filter by Date Summary Widget Only)
+            // Update Summary Text
             let dataSanSummary = APP_DATA.stockAkhirNoodle;
             if(activeStoreFilter !== 'All') dataSanSummary = dataSanSummary.filter(d => d.store === activeStoreFilter);
             if(filterDateAkhir) {
@@ -1847,8 +2014,8 @@
             tbodyRn.innerHTML = dataRn.map(d => {
                 let imgF = d.foto ? `<i class="fas fa-image text-indigo-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
 
-                let acts = ``;
-                if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                let acts = `<button onclick="viewDetail('rn', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let safeTime = String(d.jam || '').substring(0, 5);
@@ -2094,8 +2261,8 @@
             if(dataProcess.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat proses</td></tr>`; return; }
 
             tbody.innerHTML = dataProcess.map(d => {
-                let acts = ``;
-                if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                let acts = `<button onclick="viewDetail('cp', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let safeTime = String(d.jam || '').substring(0, 5);
@@ -2142,8 +2309,9 @@
 
             tbody.innerHTML = dataSisa.map(d => {
                 let imgF = d.foto ? `<i class="fas fa-image text-orange-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
-                let acts = ``;
-                if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                
+                let acts = `<button onclick="viewDetail('cs', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let safeTime = String(d.jam || '').substring(0, 5);
@@ -2466,8 +2634,9 @@
             else {
                 tbodyRec.innerHTML = dataRec.map(d => {
                     let imgF = d.foto ? `<i class="fas fa-image text-${d.color}-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
-                    let acts = ``;
-                    if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                    
+                    let acts = `<button onclick="viewDetail('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
                     let safeTime = String(d.jam || '').substring(0, 5);
@@ -2503,8 +2672,9 @@
             else {
                 tbodySu.innerHTML = dataSu.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
-                    let acts = ``;
-                    if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                    
+                    let acts = `<button onclick="viewDetail('su', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
                     let safeTime = String(d.jam || '').substring(0, 5);
@@ -2602,7 +2772,7 @@
                 let allPassLvl = true;
                 
                 const inputs = document.querySelectorAll(`.kal-input-${lvl}`);
-                inputs.forEach((inp, i) => {
+                inputs.forEach((inp) => {
                     let v = parseFloat(inp.value) || 0;
                     arr.push(v);
                     if(!isWithinRange(v, rangeStr)) {
@@ -2648,7 +2818,9 @@
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('kal_tgl').value = now.toISOString().slice(0,16);
             
-            document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Simpan Kalibrasi'; document.getElementById('btnCancelKalibrasi').classList.add('hidden');
+            document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Simpan Kalibrasi'; 
+            document.getElementById('btnCancelKalibrasi').classList.add('hidden');
+            
             if(currentUser) {
                 document.getElementById('kal_petugas').value = currentUser.name;
                 if(currentUser.role !== 'Admin') document.getElementById('kal_store').value = currentUser.store;
@@ -2666,6 +2838,37 @@
                     });
                 }
             });
+        }
+
+        function editKalibrasi(id) {
+            const d = APP_DATA.kalibrasi.find(x => x.id === id);
+            if(d) {
+                editingKalibrasiId = id; 
+                let datetimeLocal = d.tanggal + 'T' + d.jam;
+                document.getElementById('kal_tgl').value = datetimeLocal;
+                
+                document.getElementById('kal_store').value = d.store; 
+                document.getElementById('kal_batch').value = d.batch; 
+                document.getElementById('kal_crew').value = d.crew; 
+                document.getElementById('kal_kategori').value = d.kategori; 
+                
+                updateKalibrasiStd();
+                
+                ['l1', 'l2', 'l3', 'l4', 'l6', 'l8'].forEach(lvl => {
+                    if(d.detail && d.detail[lvl]) {
+                        const inputs = document.querySelectorAll(`.kal-input-${lvl}`);
+                        d.detail[lvl].data.forEach((val, i) => {
+                            if(inputs[i]) inputs[i].value = val;
+                        });
+                    }
+                });
+                evalKalibrasi();
+                
+                if(document.getElementById('formKalBody').style.display === 'none') toggleElement('formKalBody', 'iconFormKal');
+                document.getElementById('btnSubmitKalibrasi').innerHTML = '<i class="fas fa-save"></i> Update'; 
+                document.getElementById('btnCancelKalibrasi').classList.remove('hidden');
+                document.getElementById('formKalContainer').scrollIntoView();
+            }
         }
 
         function renderTableKalibrasi() {
@@ -2695,8 +2898,8 @@
             if(dataKal.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; return; }
 
             tbody.innerHTML = dataKal.map(d => {
-                let acts = ``;
-                if(isAdmin) acts += `<button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5"><i class="fas fa-trash"></i></button>`;
+                let acts = `<button onclick="viewDetail('kal', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let safeTime = String(d.jam || '').substring(0, 5);

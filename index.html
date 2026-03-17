@@ -108,6 +108,14 @@
         };
         
         let currentUser = null; let currentPage = 1; let charts = {};
+        // Fungsi deteksi Zona Waktu Otomatis (WIB/WITA/WIT)
+        const USER_TZ = (() => {
+        const offset = -(new Date().getTimezoneOffset() / 60);
+        if (offset === 7) return 'WIB';
+        if (offset === 8) return 'WITA';
+        if (offset === 9) return 'WIT';
+       return 'GMT' + (offset >= 0 ? '+' + offset : offset);
+        })();
         let editingId = null; let editingUserId = null; let editingStoreId = null; let editingKalibrasiId = null; let editingSisaId = null;
         let editingCdId = null; let editingBcId = null; let editingSuId = null; 
         let editingRnId = null; let editingSanId = null; let editingAzId = null;
@@ -1329,8 +1337,8 @@
         }
 
         function updateClock() {
-            const now = new Date();
-            document.getElementById('clockText').innerText = now.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ' - ' + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        const now = new Date();
+        document.getElementById('clockText').innerText = now.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ' - ' + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'}) + ' ' + USER_TZ;
         }
 
         function togglePassword(i, ico) {
@@ -1976,7 +1984,7 @@
                     let safeTime = String(d.jam || '').substring(0, 5);
 
                     return `<tr class="hover:bg-teal-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.crewNoodle}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2023,7 +2031,7 @@
                 let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${prodText}</td>
                     <td class="px-6 py-3"><p class="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded inline-block">${d.crewNoodle}</p></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2270,7 +2278,7 @@
                 let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
                     <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.before.toLocaleString('id-ID')}</span></td>
@@ -2317,7 +2325,7 @@
                 let safeTime = String(d.jam || '').substring(0, 5);
 
                 return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
                     <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-orange-600 bg-orange-50 border border-orange-100">${d.qty.toLocaleString('id-ID')}</span></td>
@@ -2644,7 +2652,7 @@
                     let crewInfo = d.crew ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span>` : '';
 
                     return `<tr class="hover:bg-${d.color}-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                         <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-${d.color}-100 text-${d.color}-700">${d.label}</span></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${crewInfo}</td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2680,7 +2688,7 @@
                     let safeTime = String(d.jam || '').substring(0, 5);
 
                     return `<tr class="hover:bg-cyan-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                         <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-100 text-cyan-700">Sisa Utuh</span></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2909,7 +2917,7 @@
                     : `<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-times-circle mr-1"></i> GAGAL</span>`;
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
                     <td class="px-6 py-3"><span class="font-bold text-primary uppercase text-xs">${d.kategori}</span></td>

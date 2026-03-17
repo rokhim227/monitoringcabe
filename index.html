@@ -145,6 +145,30 @@
 
         // FUNGSI PARSING TANGGAL AMAN ANTI-TIMEZONE BUG
         function getSafeDateString(dateValue) {
+          // Deteksi Zona Waktu Otomatis (WIB/WITA/WIT)
+        const USER_TZ = (() => {
+            const offset = -(new Date().getTimezoneOffset() / 60);
+            if (offset === 7) return 'WIB';
+            if (offset === 8) return 'WITA';
+            if (offset === 9) return 'WIT';
+            return 'GMT' + (offset >= 0 ? '+' + offset : offset);
+        })();
+
+        // Fungsi Memperbaiki Bug "Sat D" dari Google Sheets
+        function getSafeTimeString(timeValue) {
+            if (!timeValue) return '-';
+            let strVal = String(timeValue);
+            
+            // Jika formatnya tanggal penuh dari Google Sheet (mengatasi bug "Sat Dec 30...")
+            let t = new Date(strVal);
+            if (!isNaN(t.getTime())) {
+                return String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+            }
+            
+            // Jika formatnya normal "HH:mm"
+            if (/^\d{2}:\d{2}/.test(strVal)) return strVal.substring(0, 5);
+            return strVal.substring(0, 5);
+        }
             if (!dateValue) return '-';
             let strVal = String(dateValue);
             // Jika formatnya sudah YYYY-MM-DD
@@ -1337,9 +1361,10 @@
         }
 
         function updateClock() {
-        const now = new Date();
-        document.getElementById('clockText').innerText = now.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ' - ' + now.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', second: '2-digit'}) + ' ' + USER_TZ;
-        }
+    const now = new Date();
+    let timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clockText').innerText = now.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}) + ' - ' + timeStr + ' ' + USER_TZ;
+}
 
         function togglePassword(i, ico) {
             const el = document.getElementById(i); const c = document.getElementById(ico);
@@ -1981,7 +2006,7 @@
                     if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let safeTime = getSafeTimeString(d.jam);
 
                     return `<tr class="hover:bg-teal-50/30 border-b border-slate-50">
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
@@ -2026,7 +2051,7 @@
                 if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let safeTime = getSafeTimeString(d.jam);
 
                 let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
 
@@ -2273,7 +2298,7 @@
                 if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let safeTime = getSafeTimeString(d.jam);
 
                 let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
 
@@ -2322,7 +2347,7 @@
                 if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let safeTime = getSafeTimeString(d.jam);
 
                 return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
@@ -2647,7 +2672,7 @@
                     if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let safeTime = getSafeTimeString(d.jam);
 
                     let crewInfo = d.crew ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span>` : '';
 
@@ -2685,7 +2710,7 @@
                     if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let safeTime = getSafeTimeString(d.jam);
 
                     return `<tr class="hover:bg-cyan-50/30 border-b border-slate-50">
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} ${USER_TZ}</p></td>
@@ -2910,7 +2935,7 @@
                 if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let safeTime = getSafeTimeString(d.jam);
 
                 let statusBadge = d.status === 'LULUS' 
                     ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-check-circle mr-1"></i> LULUS</span>` 

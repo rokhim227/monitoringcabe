@@ -135,23 +135,30 @@
             }
         }
 
-        // FUNGSI PARSING TANGGAL AMAN ANTI-TIMEZONE BUG
+        // FUNGSI TANGGAL & WAKTU UNTUK LOGIKA INTERNAL
         function getSafeDateString(dateValue) {
             if (!dateValue) return '-';
-            let strVal = String(dateValue);
-            // Jika formatnya sudah YYYY-MM-DD
-            if (/^\d{4}-\d{2}-\d{2}$/.test(strVal.substring(0,10))) {
-                return strVal.substring(0,10);
+            let d = new Date(dateValue);
+            if (!isNaN(d.getTime())) {
+                let y = d.getFullYear();
+                let m = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
             }
-            // Jika butuh di-parsing
-            let t = new Date(dateValue);
-            if (!isNaN(t.getTime())) {
-                let y = t.getFullYear();
-                let m = String(t.getMonth() + 1).padStart(2, '0');
-                let d = String(t.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
+            return String(dateValue).substring(0, 10);
+        }
+
+        // FUNGSI TANGGAL SIMPLE UNTUK DISPLAY DI TABEL (Format DD/MM/YYYY)
+        function formatTgl(dateValue) {
+            if (!dateValue || dateValue === '-') return '-';
+            let d = new Date(dateValue);
+            if (!isNaN(d.getTime())) {
+                let dd = String(d.getDate()).padStart(2, '0');
+                let mm = String(d.getMonth() + 1).padStart(2, '0');
+                let yyyy = d.getFullYear();
+                return `${dd}/${mm}/${yyyy}`;
             }
-            return strVal.substring(0, 10);
+            return String(dateValue).substring(0, 10);
         }
 
         // FUNGSI KALKULASI
@@ -177,7 +184,7 @@
         }
     </script>
 
-    <!-- LOGIN SCREEN -->
+    <!-- LOGIN & REGISTER SCREEN -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
         <div class="absolute inset-0 bg-slate-900 bg-opacity-70 backdrop-blur-sm"></div>
         <div class="glass relative z-10 p-10 rounded-3xl shadow-2xl w-full max-w-md m-4 border border-white/20">
@@ -185,16 +192,47 @@
                 <div class="w-20 h-20 bg-white rounded-2xl mx-auto mb-5 flex items-center justify-center shadow-lg p-3">
                     <img id="loginLogo" src="" alt="Logo" class="w-full h-full object-contain filter drop-shadow-sm">
                 </div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Monitoring Cabe</h1>
-                <p class="text-slate-500 text-sm mt-1">Silakan masuk ke akun Anda</p>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight" id="authTitle">Monitoring Cabe</h1>
+                <p class="text-slate-500 text-sm mt-1" id="authSubtitle">Silakan masuk ke akun Anda</p>
             </div>
+            
+            <!-- Form Login -->
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="mb-5"><label class="block text-sm font-medium text-slate-600 mb-1.5">Username</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fas fa-user text-slate-400"></i></div><input type="text" id="username" class="modern-input pl-10" placeholder="Masukkan username" required></div></div>
                 <div class="mb-6"><label class="block text-sm font-medium text-slate-600 mb-1.5">Password</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"><i class="fas fa-lock text-slate-400"></i></div><input type="password" id="password" class="modern-input pl-10 pr-10" placeholder="••••••••" required><button type="button" onclick="togglePassword('password', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition"><i id="eyeIcon" class="fas fa-eye"></i></button></div></div>
                 <div class="flex items-center justify-between mb-8"><label class="flex items-center text-sm text-slate-500 cursor-pointer hover:text-slate-700 transition"><input type="checkbox" id="rememberMe" class="mr-2 rounded border-slate-300 text-primary focus:ring-primary w-4 h-4"> Simpan Info</label></div>
                 <button type="submit" class="w-full modern-btn py-2.5 text-base tracking-wide">Masuk Sekarang</button>
+                <p class="text-center mt-5 text-sm text-slate-500">Belum punya akun? <a href="javascript:void(0)" onclick="toggleAuthMode('register')" class="text-primary font-bold hover:underline transition">Daftar</a></p>
             </form>
-            <div id="loginError" class="mt-5 text-center bg-rose-50 text-rose-600 border border-rose-100 py-2 rounded-xl text-sm hidden font-medium">Username atau password salah!</div>
+
+            <!-- Form Register -->
+            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1.5">Nama Lengkap</label><input type="text" id="regName" class="modern-input" placeholder="Nama asli" required></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1.5">Username</label><input type="text" id="regUsername" class="modern-input" placeholder="Buat username" required></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1.5">Password</label><div class="relative"><input type="password" id="regPassword" class="modern-input pr-10" placeholder="Buat password" required><button type="button" onclick="togglePassword('regPassword', 'eyeIconReg')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition"><i id="eyeIconReg" class="fas fa-eye"></i></button></div></div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1.5">Role</label>
+                        <select id="regRole" class="modern-input appearance-none cursor-pointer font-medium" required>
+                            <option value="Crew">Crew</option>
+                            <option value="Stocker">Stocker</option>
+                            <option value="QC">QC</option>
+                            <option value="Store Manager">Store Manager</option>
+                            <option value="Manager">Manager</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-slate-600 mb-1.5">Store</label>
+                        <select id="regStore" class="modern-input appearance-none cursor-pointer font-medium" required>
+                            <option value="">Memuat...</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full modern-btn py-2.5 text-base tracking-wide">Daftar Akun</button>
+                <p class="text-center mt-5 text-sm text-slate-500">Sudah punya akun? <a href="javascript:void(0)" onclick="toggleAuthMode('login')" class="text-primary font-bold hover:underline transition">Masuk</a></p>
+            </form>
+
+            <div id="authError" class="mt-5 text-center bg-rose-50 text-rose-600 border border-rose-100 py-2 rounded-xl text-sm hidden font-medium"></div>
             <div class="mt-8 text-center text-xs text-slate-400 font-medium" id="loginCopyright"></div>
         </div>
     </div>
@@ -575,7 +613,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap" id="tabelReceiveData">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Kategori Data</th>
                                         <th class="px-6 py-4">Petugas / Crew</th>
                                         <th class="px-6 py-4">Store</th>
@@ -594,7 +632,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Kategori Data</th>
                                         <th class="px-6 py-4">Petugas</th>
                                         <th class="px-6 py-4">Store</th>
@@ -784,7 +822,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap" id="tabelCabeData">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Petugas & Crew</th>
                                         <th class="px-6 py-4">Store & Batch</th>
                                         <th class="px-6 py-4 text-center">Before <span class="text-[10px] lowercase text-slate-400">(gr)</span></th>
@@ -803,7 +841,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Petugas & Crew</th>
                                         <th class="px-6 py-4">Store</th>
                                         <th class="px-6 py-4 text-center">Qty Sisa <span class="text-[10px] lowercase text-slate-400">(gr)</span></th>
@@ -951,7 +989,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap" id="tabelReceiveNoodleData">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Petugas & Crew Prod</th>
                                         <th class="px-6 py-4">Crew Noodle</th>
                                         <th class="px-6 py-4">Store</th>
@@ -971,7 +1009,7 @@
                             <table class="w-full text-left text-sm whitespace-nowrap">
                                 <thead class="bg-white border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                                     <tr>
-                                        <th class="px-6 py-4">Tgl & Jam</th>
+                                        <th class="px-6 py-4">Tanggal & Jam</th>
                                         <th class="px-6 py-4">Petugas</th>
                                         <th class="px-6 py-4">Crew Noodle</th>
                                         <th class="px-6 py-4">Store</th>
@@ -1026,7 +1064,7 @@
                                                     kalLevelsArr.forEach((lvl, idx) => {
                                                         kalHtml += '<tr class="hover:bg-slate-50/50 transition-colors"><td class="px-4 py-3 font-bold text-slate-700 text-xs whitespace-nowrap">' + kalLabels[idx] + '</td><td class="px-4 py-3 font-bold text-primary text-center"><span id="std_' + lvl + '">0</span>g</td>';
                                                         for(let i=1; i<=10; i++) { kalHtml += '<td class="px-1 py-3"><input type="number" step="0.1" class="w-full min-w-[50px] border border-slate-200 rounded-lg bg-slate-50 px-1 py-1.5 text-center text-xs font-bold text-slate-700 focus:bg-white focus:border-primary kal-input-' + lvl + '" required></td>'; }
-                                                        kalHtml += '<td class="px-4 py-3 text-center font-bold text-xs" id="status_' + lvl + '">-</td></tr>';
+                                                        kalHtml += '<td class="px-4 py-3 text-center font-bold text-xs" id="status_' + lvl + '"><span class="text-slate-400">-</span></td></tr>';
                                                     }); document.write(kalHtml);
                                                 </script>
                                             </tbody>
@@ -1059,7 +1097,7 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm whitespace-nowrap" id="tabelKalData">
                                 <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase text-xs font-semibold tracking-wider">
-                                    <tr><th class="px-6 py-4">Tgl & Jam</th><th class="px-6 py-4">Petugas & Crew</th><th class="px-6 py-4">Store & Batch</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 text-center">Status Kalibrasi</th><th class="px-6 py-4 text-center">Aksi</th></tr>
+                                    <tr><th class="px-6 py-4">Tanggal & Jam</th><th class="px-6 py-4">Petugas & Crew</th><th class="px-6 py-4">Store & Batch</th><th class="px-6 py-4">Kategori</th><th class="px-6 py-4 text-center">Status Kalibrasi</th><th class="px-6 py-4 text-center">Aksi</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50 text-slate-600" id="tabelKalBody"></tbody>
                             </table>
@@ -1203,10 +1241,18 @@
     <!-- SCRIPTS KESELURUHAN -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Modify ini di code.gs Anda nanti untuk mereturn stores juga
             callAPI('getPublicSettings').then(res => {
                 if(res.success && res.data) {
                     APP_DATA.settings.logoApp = res.data.logoApp || APP_DATA.settings.logoApp;
                     APP_DATA.settings.copyright = res.data.copyright || APP_DATA.settings.copyright;
+                    if(res.data.stores) {
+                        APP_DATA.stores = res.data.stores;
+                        let regStoreSel = document.getElementById('regStore');
+                        if (regStoreSel) {
+                            regStoreSel.innerHTML = APP_DATA.stores.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                        }
+                    }
                 }
                 initAppUI();
             });
@@ -1228,6 +1274,52 @@
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('kal_tgl').value = now.toISOString().slice(0,16);
         });
+
+        function toggleAuthMode(mode) {
+            document.getElementById('authError').classList.add('hidden');
+            if(mode === 'register') {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('authSubtitle').innerText = "Buat akun baru untuk akses sistem";
+                // Render stores if loaded
+                if(APP_DATA.stores && APP_DATA.stores.length > 0) {
+                    document.getElementById('regStore').innerHTML = APP_DATA.stores.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                }
+            } else {
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('authSubtitle').innerText = "Silakan masuk ke akun Anda";
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const n = document.getElementById('regName').value;
+            const u = document.getElementById('regUsername').value;
+            const p = document.getElementById('regPassword').value;
+            const r = document.getElementById('regRole').value;
+            const s = document.getElementById('regStore').value;
+
+            const btn = document.querySelector('#registerForm button[type="submit"]');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...'; btn.disabled = true;
+
+            callAPI('registerUser', { name: n, username: u, password: p, role: r, store: s }).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                if(res.success) {
+                    Swal.fire({icon: 'success', title: 'Registrasi Berhasil', text: 'Silakan login dengan akun baru Anda.'});
+                    document.getElementById('registerForm').reset();
+                    toggleAuthMode('login');
+                } else {
+                    document.getElementById('authError').innerText = res.message || 'Gagal melakukan registrasi.';
+                    document.getElementById('authError').classList.remove('hidden');
+                }
+            }).catch(err => {
+                btn.innerHTML = orig; btn.disabled = false;
+                document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi.';
+                document.getElementById('authError').classList.remove('hidden');
+            });
+        }
 
         function initAppUI() {
             document.getElementById('loginLogo').src = APP_DATA.settings.logoApp;
@@ -1369,15 +1461,19 @@
                     
                     initAppUI(); processLoginSuccess(res.user, u, rem); 
                 } else { 
-                    document.getElementById('loginError').innerText = res.message || 'Error server'; 
-                    document.getElementById('loginError').classList.remove('hidden'); 
+                    document.getElementById('authError').innerText = res.message || 'Username atau password salah!'; 
+                    document.getElementById('authError').classList.remove('hidden'); 
                 }
+            }).catch(err => {
+                btn.innerHTML = orig; btn.disabled = false;
+                document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi!'; 
+                document.getElementById('authError').classList.remove('hidden'); 
             });
         }
         
         function processLoginSuccess(user, u, rem) {
             currentUser = user;
-            document.getElementById('loginError').classList.add('hidden'); document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appLayout').classList.remove('hidden');
+            document.getElementById('authError').classList.add('hidden'); document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('appLayout').classList.remove('hidden');
             if(rem) localStorage.setItem('savedUser', u); else localStorage.removeItem('savedUser');
             
             document.getElementById('userInfoName').innerText = user.name; document.getElementById('userInfoRole').innerText = user.role;
@@ -1453,7 +1549,7 @@
         }
 
         // ==========================================
-        // FUNGSI VIEW DETAIL (BARU)
+        // FUNGSI VIEW DETAIL
         // ==========================================
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
@@ -1471,7 +1567,7 @@
                 data = APP_DATA.analyzeData.find(x => x.id === id);
                 title = "Detail Analisa Cabe";
                 if(data) {
-                    html += addRow('Tanggal', getSafeDateString(data.tanggal));
+                    html += addRow('Tanggal', formatTgl(data.tanggal));
                     html += addRow('Store', data.store);
                     html += addRow('Stock Awal', data.stockAwal.toLocaleString('id-ID') + ' gr');
                     html += addRow('Usage System', data.usage.toLocaleString('id-ID') + ' gr');
@@ -1481,7 +1577,7 @@
                 data = APP_DATA.cabeDatang.find(x => x.id === id);
                 title = "Detail Cabe Datang";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas', data.petugas);
                     html += addRow('Store', data.store);
                     html += addRow('Qty', data.qty.toLocaleString('id-ID') + ' gr');
@@ -1491,7 +1587,7 @@
                 data = APP_DATA.belanjaCabe.find(x => x.id === id);
                 title = "Detail Belanja Cabe";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas', data.petugas);
                     html += addRow('Crew Prod (Handover)', data.crew);
                     html += addRow('Store', data.store);
@@ -1503,7 +1599,7 @@
                 data = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
                 title = "Detail Sisa Cabe Utuh (Storage)";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas', data.petugas);
                     html += addRow('Store', data.store);
                     html += addRow('Qty', data.qty.toLocaleString('id-ID') + ' gr');
@@ -1513,7 +1609,7 @@
                 data = APP_DATA.cabeProcess.find(x => x.id === id);
                 title = "Detail Proses Steam Cabe";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
                     html += addRow('Store & Batch', data.store + ' / ' + data.batch);
                     let susutCls = data.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
@@ -1531,7 +1627,7 @@
                 data = APP_DATA.cabeSisa.find(x => x.id === id);
                 title = "Detail Sisa Cabe Giling";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
                     html += addRow('Store', data.store);
                     html += addRow('Qty Sisa', data.qty.toLocaleString('id-ID') + ' gr');
@@ -1541,7 +1637,7 @@
                 data = APP_DATA.receiveNoodle.find(x => x.id === id);
                 title = "Detail Receive Noodle (Handover)";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas', data.petugas);
                     html += addRow('Crew Prod (Menyerahkan)', data.crewProd);
                     html += addRow('Crew Noodle (Menerima)', data.crewNoodle);
@@ -1553,7 +1649,7 @@
                 data = APP_DATA.stockAkhirNoodle.find(x => x.id === id);
                 title = "Detail Stock Akhir Noodle (Sisa Level)";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas', data.petugas);
                     html += addRow('Crew Noodle', data.crewNoodle);
                     html += addRow('Store', data.store);
@@ -1564,7 +1660,7 @@
                 data = APP_DATA.kalibrasi.find(x => x.id === id);
                 title = "Detail Kalibrasi Alat";
                 if(data) {
-                    html += addRow('Tanggal & Jam', getSafeDateString(data.tanggal) + ' ' + (data.jam || ''));
+                    html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
                     html += addRow('Petugas & Crew', data.petugas + ' / ' + data.crew);
                     html += addRow('Store & Batch', data.store + ' / ' + data.batch);
                     html += addRow('Kategori Mie', `<span class="uppercase text-primary font-bold">${data.kategori}</span>`);
@@ -1600,7 +1696,7 @@
                 }
             }
 
-            if(type !== 'kal') html += `</div>`; // Tutup grid jika bukan kalibrasi (kalibrasi sudah ditutup di atas)
+            if(type !== 'kal') html += `</div>`; 
 
             document.getElementById('detailModalTitle').innerHTML = `<i class="fas fa-info-circle text-sky-500"></i> ${title}`;
             document.getElementById('detailModalBody').innerHTML = html;
@@ -1712,7 +1808,7 @@
             const d = APP_DATA.analyzeData.find(x => x.id === id);
             if(d) {
                 editingAzId = id; 
-                document.getElementById('az_form_tgl').value = d.tanggal; 
+                document.getElementById('az_form_tgl').value = getSafeDateString(d.tanggal); 
                 document.getElementById('az_form_store').value = d.store; 
                 document.getElementById('az_stock_awal').value = d.stockAwal; 
                 document.getElementById('az_usage').value = d.usage; 
@@ -1760,6 +1856,7 @@
                 if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
+                let displayDate = formatTgl(d.tanggal);
                 let c = getDailyCalculations(safeDate, d.store);
                 
                 let actualUsage = d.stockAwal + c.totalIn - c.stockAkhir - c.susut;
@@ -1771,7 +1868,7 @@
                 else if(selisih > 0) { selisihCls = "text-emerald-600 bg-emerald-50 border-emerald-200 font-bold"; selisihTxt = "+" + selisihTxt; }
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50 text-xs">
-                    <td class="px-4 py-3 font-semibold text-slate-700">${safeDate}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-700">${displayDate}</td>
                     <td class="px-4 py-3 font-semibold text-slate-700">${d.store}</td>
                     <td class="px-4 py-3 font-bold text-indigo-600">Cabe</td>
                     <td class="px-4 py-3 text-right font-medium">${d.stockAwal.toLocaleString('id-ID')}</td>
@@ -1971,11 +2068,11 @@
                     let acts = `<button onclick="viewDetail('san', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                     if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                    let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
                     return `<tr class="hover:bg-teal-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.crewNoodle}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2016,13 +2113,13 @@
                 let acts = `<button onclick="viewDetail('rn', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                 if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let displayDate = formatTgl(d.tanggal);
+                let displayTime = String(d.jam || '').substring(0, 5);
 
                 let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${prodText}</td>
                     <td class="px-6 py-3"><p class="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded inline-block">${d.crewNoodle}</p></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2263,13 +2360,13 @@
                 let acts = `<button onclick="viewDetail('cp', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                 if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let displayDate = formatTgl(d.tanggal);
+                let displayTime = String(d.jam || '').substring(0, 5);
 
                 let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
                     <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.before.toLocaleString('id-ID')}</span></td>
@@ -2312,11 +2409,11 @@
                 let acts = `<button onclick="viewDetail('cs', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                 if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let displayDate = formatTgl(d.tanggal);
+                let displayTime = String(d.jam || '').substring(0, 5);
 
                 return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
                     <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-orange-600 bg-orange-50 border border-orange-100">${d.qty.toLocaleString('id-ID')}</span></td>
@@ -2637,13 +2734,13 @@
                     let acts = `<button onclick="viewDetail('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                     if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                    let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
                     let crewInfo = d.crew ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span>` : '';
 
                     return `<tr class="hover:bg-${d.color}-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                         <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-${d.color}-100 text-${d.color}-700">${d.label}</span></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${crewInfo}</td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2675,11 +2772,11 @@
                     let acts = `<button onclick="viewDetail('su', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                     if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                    let safeDate = getSafeDateString(d.tanggal);
-                    let safeTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
                     return `<tr class="hover:bg-cyan-50/30 border-b border-slate-50">
-                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                         <td class="px-6 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-100 text-cyan-700">Sisa Utuh</span></td>
                         <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p></td>
                         <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
@@ -2740,12 +2837,13 @@
                 });
 
                 const statusEl = document.getElementById(`status_${lvl}`);
-                if(!allFilled) {
-                    statusEl.innerHTML = '<span class="text-slate-400">-</span>';
-                } else if(allPass) {
-                    statusEl.innerHTML = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded">LULUS</span>';
+                if(!allPass) {
+                     statusEl.innerHTML = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded font-bold text-[10px]">GAGAL</span>';
+                } else if(!allFilled) {
+                    let hasValue = Array.from(inputs).some(inp => inp.value !== "");
+                    statusEl.innerHTML = hasValue ? '<span class="text-slate-400 font-bold text-[10px]">Proses...</span>' : '<span class="text-slate-400">-</span>';
                 } else {
-                    statusEl.innerHTML = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded">GAGAL</span>';
+                    statusEl.innerHTML = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold text-[10px]">LULUS</span>';
                 }
             });
         }
@@ -2843,7 +2941,7 @@
             const d = APP_DATA.kalibrasi.find(x => x.id === id);
             if(d) {
                 editingKalibrasiId = id; 
-                let datetimeLocal = d.tanggal + 'T' + d.jam;
+                let datetimeLocal = d.tanggal + 'T' + (d.jam || '00:00');
                 document.getElementById('kal_tgl').value = datetimeLocal;
                 
                 document.getElementById('kal_store').value = d.store; 
@@ -2891,7 +2989,7 @@
                 return m1 && m2 && m3 && m4;
             });
 
-            dataKal.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            dataKal.sort((a,b) => new Date(b.tanggal + ' ' + (b.jam||'00:00')) - new Date(a.tanggal + ' ' + (a.jam||'00:00')));
             
             document.getElementById('tabelKalInfo').innerText = `Menampilkan ${dataKal.length} data kalibrasi`;
             if(dataKal.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; return; }
@@ -2900,15 +2998,15 @@
                 let acts = `<button onclick="viewDetail('kal', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                 if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let safeDate = getSafeDateString(d.tanggal);
-                let safeTime = String(d.jam || '').substring(0, 5);
+                let displayDate = formatTgl(d.tanggal);
+                let displayTime = String(d.jam || '').substring(0, 5);
 
                 let statusBadge = d.status === 'LULUS' 
                     ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-check-circle mr-1"></i> LULUS</span>` 
                     : `<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-times-circle mr-1"></i> GAGAL</span>`;
 
                 return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${safeDate}</p><p class="text-[10px] text-slate-400">${safeTime} WIB</p></td>
+                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
                     <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
                     <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
                     <td class="px-6 py-3"><span class="font-bold text-primary uppercase text-xs">${d.kategori}</span></td>

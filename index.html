@@ -112,6 +112,60 @@
         let editingCdId = null; let editingBcId = null; let editingSuId = null; 
         let editingRnId = null; let editingSanId = null; let editingAzId = null;
 
+        // Pagination State Management
+        let paginationState = {
+            analyze: { page: 1, limit: 10 },
+            receive: { page: 1, limit: 10 },
+            sisaUtuh: { page: 1, limit: 10 },
+            cabeProcess: { page: 1, limit: 10 },
+            cabeSisa: { page: 1, limit: 10 },
+            receiveNoodle: { page: 1, limit: 10 },
+            stockAkhirNoodle: { page: 1, limit: 10 },
+            kalibrasi: { page: 1, limit: 10 }
+        };
+
+        function changePage(tableKey, pageNum) {
+            paginationState[tableKey].page = pageNum;
+            if(tableKey === 'analyze') renderAnalyzeData();
+            if(tableKey === 'receive' || tableKey === 'sisaUtuh') renderReceiveStockerData();
+            if(tableKey === 'cabeProcess') renderTableCabe();
+            if(tableKey === 'cabeSisa') renderTableSisa();
+            if(tableKey === 'receiveNoodle' || tableKey === 'stockAkhirNoodle') renderReceiveNoodleData();
+            if(tableKey === 'kalibrasi') renderTableKalibrasi();
+        }
+
+        function renderPagination(totalItems, limit, currentPage, containerId, tableKey) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const totalPages = Math.ceil(totalItems / limit);
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<button onclick="changePage('${tableKey}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition"><i class="fas fa-chevron-left text-[10px]"></i></button>`;
+            
+            let startP = Math.max(1, currentPage - 2);
+            let endP = Math.min(totalPages, currentPage + 2);
+            
+            if(startP > 1) html += `<button onclick="changePage('${tableKey}', 1)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition text-xs font-semibold">1</button> ${startP > 2 ? '<span class="px-1 text-slate-400">...</span>' : ''}`;
+            
+            for(let i = startP; i <= endP; i++) {
+                if(i === currentPage) {
+                    html += `<button class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-primary bg-rose-50 text-primary font-bold shadow-sm transition text-xs">${i}</button>`;
+                } else {
+                    html += `<button onclick="changePage('${tableKey}', ${i})" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition text-xs font-semibold">${i}</button>`;
+                }
+            }
+
+            if(endP < totalPages) html += `${endP < totalPages - 1 ? '<span class="px-1 text-slate-400">...</span>' : ''} <button onclick="changePage('${tableKey}', ${totalPages})" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition text-xs font-semibold">${totalPages}</button>`;
+
+            html += `<button onclick="changePage('${tableKey}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition"><i class="fas fa-chevron-right text-[10px]"></i></button>`;
+
+            container.innerHTML = html;
+        }
+
         function isWithinRange(val, rangeStr) {
             if(val === "" || isNaN(val)) return false;
             let v = parseFloat(val);
@@ -420,6 +474,19 @@
                                     <button onclick="exportPDF('tabelAnalyzeData', 'Analyze_Data_Cabe')" class="bg-rose-50 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-rose-100 transition flex items-center gap-1.5"><i class="fas fa-file-pdf"></i> PDF</button>
                                 </div>
                             </div>
+                            <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
+                                <div class="relative flex-1 min-w-[200px]">
+                                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                                    <input type="text" id="searchAnalyze" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="paginationState.analyze.page=1; renderAnalyzeData()">
+                                </div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterAzStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.analyze.page=1; renderAnalyzeData()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterAzEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.analyze.page=1; renderAnalyzeData()"></div>
+                                <div class="relative">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label>
+                                    <select id="tabelFilterAzStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="paginationState.analyze.page=1; renderAnalyzeData()"><option value="All">Semua Store</option></select>
+                                    <i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm whitespace-nowrap" id="tabelAnalyzeData">
@@ -443,7 +510,10 @@
                                 <tbody class="divide-y divide-slate-100 text-slate-600 bg-white" id="tabelAnalyzeBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white"><span id="tabelAnalyzeInfo" class="font-medium">Menampilkan 0 data</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white">
+                            <span id="tabelAnalyzeInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data</span>
+                            <div id="paginationAnalyze" class="flex gap-1"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -596,13 +666,13 @@
                             <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
                                 <div class="relative flex-1 min-w-[200px]">
                                     <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
-                                    <input type="text" id="searchReceive" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderReceiveStockerData()">
+                                    <input type="text" id="searchReceive" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="paginationState.receive.page=1; paginationState.sisaUtuh.page=1; renderReceiveStockerData()">
                                 </div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterRecStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderReceiveStockerData()"></div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterRecEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderReceiveStockerData()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterRecStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.receive.page=1; paginationState.sisaUtuh.page=1; renderReceiveStockerData()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterRecEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.receive.page=1; paginationState.sisaUtuh.page=1; renderReceiveStockerData()"></div>
                                 <div class="relative">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label>
-                                    <select id="tabelFilterRecStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderReceiveStockerData()"><option value="All">Semua Store</option></select>
+                                    <select id="tabelFilterRecStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="paginationState.receive.page=1; paginationState.sisaUtuh.page=1; renderReceiveStockerData()"><option value="All">Semua Store</option></select>
                                     <i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i>
                                 </div>
                             </div>
@@ -625,7 +695,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelReceiveBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white border-b-4 border-b-slate-100"><span id="tabelReceiveInfo" class="font-medium">Menampilkan 0 data</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white border-b-4 border-b-slate-100">
+                            <span id="tabelReceiveInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data</span>
+                            <div id="paginationReceive" class="flex gap-1"></div>
+                        </div>
 
                         <div class="p-3 bg-cyan-50/50 border-b border-cyan-100 text-xs font-bold text-cyan-600 uppercase tracking-wider pl-6"><i class="fas fa-archive mr-1"></i> Tabel Sisa Cabe Utuh Storage</div>
                         <div class="overflow-x-auto">
@@ -644,7 +717,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelSisaUtuhBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white"><span id="tabelSisaUtuhInfo" class="font-medium">Menampilkan 0 data sisa utuh</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white">
+                            <span id="tabelSisaUtuhInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data sisa utuh</span>
+                            <div id="paginationSisaUtuh" class="flex gap-1"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -799,19 +875,19 @@
                             <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
                                 <div class="relative flex-1 min-w-[200px]">
                                     <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
-                                    <input type="text" id="searchCabe" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderTableCabe(); renderTableSisa();">
+                                    <input type="text" id="searchCabe" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="paginationState.cabeProcess.page=1; paginationState.cabeSisa.page=1; renderTableCabe(); renderTableSisa();">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label>
-                                    <input type="date" id="tabelFilterStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableCabe(); renderTableSisa();">
+                                    <input type="date" id="tabelFilterStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.cabeProcess.page=1; paginationState.cabeSisa.page=1; renderTableCabe(); renderTableSisa();">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label>
-                                    <input type="date" id="tabelFilterEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableCabe(); renderTableSisa();">
+                                    <input type="date" id="tabelFilterEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.cabeProcess.page=1; paginationState.cabeSisa.page=1; renderTableCabe(); renderTableSisa();">
                                 </div>
                                 <div class="relative">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label>
-                                    <select id="tabelFilterStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderTableCabe(); renderTableSisa();"><option value="All">Semua Store</option></select>
+                                    <select id="tabelFilterStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="paginationState.cabeProcess.page=1; paginationState.cabeSisa.page=1; renderTableCabe(); renderTableSisa();"><option value="All">Semua Store</option></select>
                                     <i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i>
                                 </div>
                             </div>
@@ -834,7 +910,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelCabeBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white border-b-4 border-b-slate-100"><span id="tabelCabeInfo" class="font-medium">Menampilkan 0 data proses</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white border-b-4 border-b-slate-100">
+                            <span id="tabelCabeInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data proses</span>
+                            <div id="paginationCabeProcess" class="flex gap-1"></div>
+                        </div>
 
                         <div class="p-3 bg-orange-50/50 border-b border-orange-100 text-xs font-bold text-orange-600 uppercase tracking-wider pl-6"><i class="fas fa-box-open mr-1"></i> Tabel Sisa Cabe Giling</div>
                         <div class="overflow-x-auto">
@@ -852,7 +931,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelSisaBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white"><span id="tabelSisaInfo" class="font-medium">Menampilkan 0 data sisa</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white">
+                            <span id="tabelSisaInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data sisa</span>
+                            <div id="paginationCabeSisa" class="flex gap-1"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -971,13 +1053,13 @@
                             <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
                                 <div class="relative flex-1 min-w-[200px]">
                                     <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
-                                    <input type="text" id="searchReceiveNoodle" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderReceiveNoodleData()">
+                                    <input type="text" id="searchReceiveNoodle" placeholder="Pencarian cepat..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="paginationState.receiveNoodle.page=1; paginationState.stockAkhirNoodle.page=1; renderReceiveNoodleData()">
                                 </div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterRnStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderReceiveNoodleData()"></div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterRnEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderReceiveNoodleData()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterRnStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.receiveNoodle.page=1; paginationState.stockAkhirNoodle.page=1; renderReceiveNoodleData()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterRnEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.receiveNoodle.page=1; paginationState.stockAkhirNoodle.page=1; renderReceiveNoodleData()"></div>
                                 <div class="relative">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label>
-                                    <select id="tabelFilterRnStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderReceiveNoodleData()"><option value="All">Semua Store</option></select>
+                                    <select id="tabelFilterRnStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="paginationState.receiveNoodle.page=1; paginationState.stockAkhirNoodle.page=1; renderReceiveNoodleData()"><option value="All">Semua Store</option></select>
                                     <i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i>
                                 </div>
                             </div>
@@ -1001,7 +1083,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelReceiveNoodleBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white border-b-4 border-b-slate-100"><span id="tabelReceiveNoodleInfo" class="font-medium">Menampilkan 0 data</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white border-b-4 border-b-slate-100">
+                            <span id="tabelReceiveNoodleInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data</span>
+                            <div id="paginationReceiveNoodle" class="flex gap-1"></div>
+                        </div>
 
                         <!-- Table 2: Stock Akhir Cabe -->
                         <div class="p-3 bg-teal-50/50 border-b border-teal-100 text-xs font-bold text-teal-600 uppercase tracking-wider pl-6"><i class="fas fa-check-double mr-1"></i> Tabel Stock Akhir Cabe (Sisa Level)</div>
@@ -1021,7 +1106,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600 bg-white" id="tabelStockAkhirBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-4 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500 bg-white"><span id="tabelStockAkhirInfo" class="font-medium">Menampilkan 0 data sisa</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-white">
+                            <span id="tabelStockAkhirInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data sisa</span>
+                            <div id="paginationStockAkhirNoodle" class="flex gap-1"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -1088,10 +1176,10 @@
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-3 items-end w-full border-t border-slate-100 pt-4">
-                                <div class="relative flex-1 min-w-[200px]"><i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i><input type="text" id="searchKalibrasi" placeholder="Cari petugas, crew..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="renderTableKalibrasi()"></div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterKalStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableKalibrasi()"></div>
-                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterKalEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="renderTableKalibrasi()"></div>
-                                <div class="relative"><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label><select id="tabelFilterKalStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="renderTableKalibrasi()"><option value="All">Semua Store</option></select><i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i></div>
+                                <div class="relative flex-1 min-w-[200px]"><i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i><input type="text" id="searchKalibrasi" placeholder="Cari petugas, crew..." class="modern-input py-1.5 pl-9 w-full text-sm" onkeyup="paginationState.kalibrasi.page=1; renderTableKalibrasi()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dari Tgl</label><input type="date" id="tabelFilterKalStart" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.kalibrasi.page=1; renderTableKalibrasi()"></div>
+                                <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sampai Tgl</label><input type="date" id="tabelFilterKalEnd" class="modern-input py-1.5 text-sm cursor-pointer" onchange="paginationState.kalibrasi.page=1; renderTableKalibrasi()"></div>
+                                <div class="relative"><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Store</label><select id="tabelFilterKalStore" class="modern-input py-1.5 pr-8 text-sm appearance-none cursor-pointer" onchange="paginationState.kalibrasi.page=1; renderTableKalibrasi()"><option value="All">Semua Store</option></select><i class="fas fa-chevron-down absolute right-3 top-7 text-slate-400 pointer-events-none text-[10px]"></i></div>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -1102,7 +1190,10 @@
                                 <tbody class="divide-y divide-slate-50 text-slate-600" id="tabelKalBody"></tbody>
                             </table>
                         </div>
-                        <div class="p-5 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500 bg-slate-50/30"><span id="tabelKalInfo" class="font-medium">Menampilkan 0 data</span></div>
+                        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-center bg-slate-50/30">
+                            <span id="tabelKalInfo" class="text-xs text-slate-500 font-medium">Menampilkan 0 data</span>
+                            <div id="paginationKalibrasi" class="flex gap-1"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -1343,14 +1434,14 @@
             const storeDropdowns = [
                 'filterStore', 'tabelFilterStore', 'cb_store', 'sisa_store', 'kal_store', 
                 'u_store', 'tabelFilterKalStore', 'tabelFilterRecStore', 'rn_store', 'san_store', 'tabelFilterRnStore',
-                'az_filter_store', 'az_form_store'
+                'az_filter_store', 'az_form_store', 'tabelFilterAzStore'
             ];
             const allStoresHtml = APP_DATA.stores.map(st => `<option value="${st.name}">${st.name}</option>`).join('');
             storeDropdowns.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
                     let oldVal = el.value;
-                    if(id === 'filterStore' || id === 'tabelFilterStore' || id === 'tabelFilterKalStore' || id === 'tabelFilterRecStore' || id === 'tabelFilterRnStore' || id === 'az_filter_store') {
+                    if(id === 'filterStore' || id === 'tabelFilterStore' || id === 'tabelFilterKalStore' || id === 'tabelFilterRecStore' || id === 'tabelFilterRnStore' || id === 'az_filter_store' || id === 'tabelFilterAzStore') {
                         el.innerHTML = `<option value="All">Semua Store</option>` + allStoresHtml;
                     } else if(id === 'u_store') {
                         el.innerHTML = `<option value="All">All Store</option>` + allStoresHtml;
@@ -1825,33 +1916,56 @@
             if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
             
             const tbodyAz = document.getElementById('tabelAnalyzeBody');
-            const filterDate = document.getElementById('az_filter_date').value;
-            const filterStore = document.getElementById('az_filter_store').value;
+            
+            // Filter Global utk Summary
+            const filterDateGlobal = document.getElementById('az_filter_date').value;
+            const filterStoreGlobal = document.getElementById('az_filter_store').value;
             
             const isAdmin = currentUser && currentUser.role === 'Admin';
-            let activeStoreFilter = filterStore;
-            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreFilter = currentUser.store;
+            let activeStoreGlobal = filterStoreGlobal;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeStoreGlobal = currentUser.store;
 
-            let globCalc = getDailyCalculations(filterDate, activeStoreFilter);
+            let globCalc = getDailyCalculations(filterDateGlobal, activeStoreGlobal);
             document.getElementById('az_sum_storage').innerText = globCalc.sisaUtuh.toLocaleString('id-ID');
             document.getElementById('az_sum_prod').innerText = globCalc.sisaProd.toLocaleString('id-ID');
             document.getElementById('az_sum_noodle').innerText = globCalc.sisaNoodle.toLocaleString('id-ID');
 
             updateAnalyzePreview();
 
+            // Filter Khusus Tabel Analisa
+            const searchAz = document.getElementById('searchAnalyze').value.toLowerCase();
+            const filterStartAz = document.getElementById('tabelFilterAzStart').value;
+            const filterEndAz = document.getElementById('tabelFilterAzEnd').value;
+            const filterStoreAz = document.getElementById('tabelFilterAzStore').value;
+            
+            let activeTableStoreAz = filterStoreAz;
+            if (!isAdmin && currentUser && currentUser.store !== 'All') activeTableStoreAz = currentUser.store;
+
             let dataAz = APP_DATA.analyzeData.filter(d => {
-                let m1 = activeStoreFilter === 'All' || d.store === activeStoreFilter;
+                let m1 = activeTableStoreAz === 'All' || d.store === activeTableStoreAz;
                 let safeDate = getSafeDateString(d.tanggal);
-                let m2 = !filterDate || safeDate === filterDate;
-                return m1 && m2;
+                let m2 = !filterStartAz || safeDate >= filterStartAz;
+                let m3 = !filterEndAz || safeDate <= filterEndAz;
+                let m4 = (d.store||'').toLowerCase().includes(searchAz) || (d.justify||'').toLowerCase().includes(searchAz);
+                return m1 && m2 && m3 && m4;
             });
+            
             dataAz.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal));
 
             document.getElementById('tabelAnalyzeInfo').innerText = `Menampilkan ${dataAz.length} data analisa`;
 
-            if(dataAz.length === 0) { tbodyAz.innerHTML = `<tr><td colspan="13" class="text-center py-6 text-slate-400 font-medium">Belum ada data analisa tersimpan</td></tr>`; return; }
+            if(dataAz.length === 0) { 
+                tbodyAz.innerHTML = `<tr><td colspan="13" class="text-center py-6 text-slate-400 font-medium">Belum ada data analisa tersimpan</td></tr>`; 
+                renderPagination(0, 10, 1, 'paginationAnalyze', 'analyze');
+                return; 
+            }
 
-            tbodyAz.innerHTML = dataAz.map(d => {
+            const page = paginationState.analyze.page;
+            const limit = paginationState.analyze.limit;
+            const startIdx = (page - 1) * limit;
+            const paginatedDataAz = dataAz.slice(startIdx, startIdx + limit);
+
+            tbodyAz.innerHTML = paginatedDataAz.map(d => {
                 let acts = `<button onclick="viewDetail('analyze', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
                 if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
@@ -1883,6 +1997,8 @@
                     <td class="px-4 py-3 text-center">${acts}</td>
                 </tr>`;
             }).join('');
+            
+            renderPagination(dataAz.length, limit, page, 'paginationAnalyze', 'analyze');
         }
 
         // ==========================================
@@ -2060,9 +2176,16 @@
             dataSan.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
             
             document.getElementById('tabelStockAkhirInfo').innerText = `Menampilkan ${dataSan.length} data sisa`;
-            if(dataSan.length === 0) { tbodySan.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa level</td></tr>`; }
-            else {
-                tbodySan.innerHTML = dataSan.map(d => {
+            
+            const pageSan = paginationState.stockAkhirNoodle.page;
+            const limitSan = paginationState.stockAkhirNoodle.limit;
+            const startSan = (pageSan - 1) * limitSan;
+            const paginatedSan = dataSan.slice(startSan, startSan + limitSan);
+
+            if(dataSan.length === 0) { 
+                tbodySan.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa level</td></tr>`; 
+            } else {
+                tbodySan.innerHTML = paginatedSan.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
                     let acts = `<button onclick="viewDetail('san', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
@@ -2082,6 +2205,7 @@
                     </tr>`;
                 }).join('');
             }
+            renderPagination(dataSan.length, limitSan, pageSan, 'paginationStockAkhirNoodle', 'stockAkhirNoodle');
             
             // Update Summary Text
             let dataSanSummary = APP_DATA.stockAkhirNoodle;
@@ -2105,29 +2229,37 @@
 
             document.getElementById('tabelReceiveNoodleInfo').innerText = `Menampilkan ${dataRn.length} data`;
 
-            if(dataRn.length === 0) { tbodyRn.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat receive noodle</td></tr>`; return; }
+            const pageRn = paginationState.receiveNoodle.page;
+            const limitRn = paginationState.receiveNoodle.limit;
+            const startRn = (pageRn - 1) * limitRn;
+            const paginatedRn = dataRn.slice(startRn, startRn + limitRn);
 
-            tbodyRn.innerHTML = dataRn.map(d => {
-                let imgF = d.foto ? `<i class="fas fa-image text-indigo-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
+            if(dataRn.length === 0) { 
+                tbodyRn.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat receive noodle</td></tr>`; 
+            } else {
+                tbodyRn.innerHTML = paginatedRn.map(d => {
+                    let imgF = d.foto ? `<i class="fas fa-image text-indigo-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
 
-                let acts = `<button onclick="viewDetail('rn', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('rn', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let displayDate = formatTgl(d.tanggal);
-                let displayTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
-                let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
+                    let prodText = d.crewProd ? `<span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> Prod: ${d.crewProd}</span>` : '';
 
-                return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
-                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${prodText}</td>
-                    <td class="px-6 py-3"><p class="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded inline-block">${d.crewNoodle}</p></td>
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
-                    <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800 text-base">${d.qty.toLocaleString('id-ID')}</span></td>
-                    <td class="px-6 py-3 text-center">${imgF}</td>
-                    <td class="px-6 py-3 text-center">${acts}</td>
-                </tr>`;
-            }).join('');
+                    return `<tr class="hover:bg-slate-50 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p>${prodText}</td>
+                        <td class="px-6 py-3"><p class="font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded inline-block">${d.crewNoodle}</p></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
+                        <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800 text-base">${d.qty.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center">${imgF}</td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+            renderPagination(dataRn.length, limitRn, pageRn, 'paginationReceiveNoodle', 'receiveNoodle');
         }
 
         // ==========================================
@@ -2354,27 +2486,36 @@
             updateProcessSummaries(dataProcess);
             
             document.getElementById('tabelCabeInfo').innerText = `Menampilkan ${dataProcess.length} data proses`;
-            if(dataProcess.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat proses</td></tr>`; return; }
+            
+            const page = paginationState.cabeProcess.page;
+            const limit = paginationState.cabeProcess.limit;
+            const startIdx = (page - 1) * limit;
+            const paginatedProcess = dataProcess.slice(startIdx, startIdx + limit);
 
-            tbody.innerHTML = dataProcess.map(d => {
-                let acts = `<button onclick="viewDetail('cp', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+            if(dataProcess.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat proses</td></tr>`; 
+            } else {
+                tbody.innerHTML = paginatedProcess.map(d => {
+                    let acts = `<button onclick="viewDetail('cp', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let displayDate = formatTgl(d.tanggal);
-                let displayTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
-                let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
+                    let susutCls = d.susut < 0 ? 'text-rose-600' : 'text-emerald-600';
 
-                return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
-                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
-                    <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.before.toLocaleString('id-ID')}</span></td>
-                    <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.after.toLocaleString('id-ID')}</span></td>
-                    <td class="px-6 py-3 text-center"><span class="font-bold ${susutCls}">${d.susut.toLocaleString('id-ID')}</span></td>
-                    <td class="px-6 py-3 text-center">${acts}</td>
-                </tr>`;
-            }).join('');
+                    return `<tr class="hover:bg-slate-50 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
+                        <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.before.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center"><span class="font-bold text-slate-800">${d.after.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center"><span class="font-bold ${susutCls}">${d.susut.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+            renderPagination(dataProcess.length, limit, page, 'paginationCabeProcess', 'cabeProcess');
         }
 
         function renderTableSisa() {
@@ -2401,26 +2542,35 @@
             dataSisa.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
             
             document.getElementById('tabelSisaInfo').innerText = `Menampilkan ${dataSisa.length} data sisa`;
-            if(dataSisa.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa giling</td></tr>`; return; }
+            
+            const page = paginationState.cabeSisa.page;
+            const limit = paginationState.cabeSisa.limit;
+            const startIdx = (page - 1) * limit;
+            const paginatedSisa = dataSisa.slice(startIdx, startIdx + limit);
 
-            tbody.innerHTML = dataSisa.map(d => {
-                let imgF = d.foto ? `<i class="fas fa-image text-orange-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
-                
-                let acts = `<button onclick="viewDetail('cs', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+            if(dataSisa.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa giling</td></tr>`; 
+            } else {
+                tbody.innerHTML = paginatedSisa.map(d => {
+                    let imgF = d.foto ? `<i class="fas fa-image text-orange-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
+                    
+                    let acts = `<button onclick="viewDetail('cs', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let displayDate = formatTgl(d.tanggal);
-                let displayTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
-                return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
-                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
-                    <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-orange-600 bg-orange-50 border border-orange-100">${d.qty.toLocaleString('id-ID')}</span></td>
-                    <td class="px-6 py-3 text-center">${imgF}</td>
-                    <td class="px-6 py-3 text-center">${acts}</td>
-                </tr>`;
-            }).join('');
+                    return `<tr class="hover:bg-orange-50/30 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p></td>
+                        <td class="px-6 py-3 text-center"><span class="px-3 py-1 rounded-md font-bold text-orange-600 bg-orange-50 border border-orange-100">${d.qty.toLocaleString('id-ID')}</span></td>
+                        <td class="px-6 py-3 text-center">${imgF}</td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+            renderPagination(dataSisa.length, limit, page, 'paginationCabeSisa', 'cabeSisa');
         }
 
         function renderSisaData() {
@@ -2700,7 +2850,8 @@
 
             // Update Summary Card
             let dataSuSummary = APP_DATA.cabeUtuhSisa;
-            if(activeStoreFilter !== 'All') dataSuSummary = dataSuSummary.filter(d => d.store === activeStoreFilter);
+            let sumStoreFilter = currentUser && currentUser.store !== 'All' ? currentUser.store : 'All';
+            if(sumStoreFilter !== 'All') dataSuSummary = dataSuSummary.filter(d => d.store === sumStoreFilter);
             if(filterDateUtuhSisa) {
                 dataSuSummary = dataSuSummary.filter(d => getSafeDateString(d.tanggal) === filterDateUtuhSisa);
             }
@@ -2721,14 +2872,20 @@
                 return m1 && m2 && m3 && m4;
             });
 
-            dataRec.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            dataRec.sort((a,b) => new Date(b.tanggal + ' ' + (b.jam||'00:00')) - new Date(a.tanggal + ' ' + (a.jam||'00:00')));
             
             const tbodyRec = document.getElementById('tabelReceiveBody');
             document.getElementById('tabelReceiveInfo').innerText = `Menampilkan ${dataRec.length} data`;
             
-            if(dataRec.length === 0) { tbodyRec.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data</td></tr>`; }
-            else {
-                tbodyRec.innerHTML = dataRec.map(d => {
+            const pageRec = paginationState.receive.page;
+            const limitRec = paginationState.receive.limit;
+            const startRec = (pageRec - 1) * limitRec;
+            const paginatedRec = dataRec.slice(startRec, startRec + limitRec);
+            
+            if(dataRec.length === 0) { 
+                tbodyRec.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data</td></tr>`; 
+            } else {
+                tbodyRec.innerHTML = paginatedRec.map(d => {
                     let imgF = d.foto ? `<i class="fas fa-image text-${d.color}-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
                     let acts = `<button onclick="viewDetail('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
@@ -2750,6 +2907,7 @@
                     </tr>`;
                 }).join('');
             }
+            renderPagination(dataRec.length, limitRec, pageRec, 'paginationReceive', 'receive');
 
             // Render Table 2: Sisa Utuh
             let dataSu = APP_DATA.cabeUtuhSisa.filter(d => {
@@ -2759,14 +2917,20 @@
                 let m3 = !filterStart || safeDate >= filterStart; let m4 = !filterEnd || safeDate <= filterEnd;
                 return m1 && m2 && m3 && m4;
             });
-            dataSu.sort((a,b) => new Date(b.tanggal + ' ' + b.jam) - new Date(a.tanggal + ' ' + a.jam));
+            dataSu.sort((a,b) => new Date(b.tanggal + ' ' + (b.jam||'00:00')) - new Date(a.tanggal + ' ' + (a.jam||'00:00')));
 
             const tbodySu = document.getElementById('tabelSisaUtuhBody');
-            document.getElementById('tabelSisaUtuhInfo').innerText = `Menampilkan ${dataSu.length} data`;
+            document.getElementById('tabelSisaUtuhInfo').innerText = `Menampilkan ${dataSu.length} data sisa utuh`;
             
-            if(dataSu.length === 0) { tbodySu.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa utuh</td></tr>`; }
-            else {
-                tbodySu.innerHTML = dataSu.map(d => {
+            const pageSu = paginationState.sisaUtuh.page;
+            const limitSu = paginationState.sisaUtuh.limit;
+            const startSu = (pageSu - 1) * limitSu;
+            const paginatedSu = dataSu.slice(startSu, startSu + limitSu);
+
+            if(dataSu.length === 0) { 
+                tbodySu.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada data sisa utuh</td></tr>`; 
+            } else {
+                tbodySu.innerHTML = paginatedSu.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
                     let acts = `<button onclick="viewDetail('su', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
@@ -2786,6 +2950,7 @@
                     </tr>`;
                 }).join('');
             }
+            renderPagination(dataSu.length, limitSu, pageSu, 'paginationSisaUtuh', 'sisaUtuh');
         }
 
         // ==========================================
@@ -2992,28 +3157,37 @@
             dataKal.sort((a,b) => new Date(b.tanggal + ' ' + (b.jam||'00:00')) - new Date(a.tanggal + ' ' + (a.jam||'00:00')));
             
             document.getElementById('tabelKalInfo').innerText = `Menampilkan ${dataKal.length} data kalibrasi`;
-            if(dataKal.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; return; }
+            
+            const page = paginationState.kalibrasi.page;
+            const limit = paginationState.kalibrasi.limit;
+            const startIdx = (page - 1) * limit;
+            const paginatedKal = dataKal.slice(startIdx, startIdx + limit);
 
-            tbody.innerHTML = dataKal.map(d => {
-                let acts = `<button onclick="viewDetail('kal', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+            if(dataKal.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; 
+            } else {
+                tbody.innerHTML = paginatedKal.map(d => {
+                    let acts = `<button onclick="viewDetail('kal', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
-                let displayDate = formatTgl(d.tanggal);
-                let displayTime = String(d.jam || '').substring(0, 5);
+                    let displayDate = formatTgl(d.tanggal);
+                    let displayTime = String(d.jam || '').substring(0, 5);
 
-                let statusBadge = d.status === 'LULUS' 
-                    ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-check-circle mr-1"></i> LULUS</span>` 
-                    : `<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-times-circle mr-1"></i> GAGAL</span>`;
+                    let statusBadge = d.status === 'LULUS' 
+                        ? `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-check-circle mr-1"></i> LULUS</span>` 
+                        : `<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded font-bold text-[10px]"><i class="fas fa-times-circle mr-1"></i> GAGAL</span>`;
 
-                return `<tr class="hover:bg-slate-50 border-b border-slate-50">
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
-                    <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
-                    <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
-                    <td class="px-6 py-3"><span class="font-bold text-primary uppercase text-xs">${d.kategori}</span></td>
-                    <td class="px-6 py-3 text-center">${statusBadge}</td>
-                    <td class="px-6 py-3 text-center">${acts}</td>
-                </tr>`;
-            }).join('');
+                    return `<tr class="hover:bg-slate-50 border-b border-slate-50">
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${displayDate}</p><p class="text-[10px] text-slate-400">${displayTime}</p></td>
+                        <td class="px-6 py-3"><p class="font-medium text-slate-700">${d.petugas}</p><span class="block text-[10px] text-slate-400 mt-0.5"><i class="fas fa-user-tag mr-0.5"></i> ${d.crew}</span></td>
+                        <td class="px-6 py-3"><p class="font-semibold text-slate-700">${d.store}</p><p class="text-[10px] text-slate-500">${d.batch}</p></td>
+                        <td class="px-6 py-3"><span class="font-bold text-primary uppercase text-xs">${d.kategori}</span></td>
+                        <td class="px-6 py-3 text-center">${statusBadge}</td>
+                        <td class="px-6 py-3 text-center">${acts}</td>
+                    </tr>`;
+                }).join('');
+            }
+            renderPagination(dataKal.length, limit, page, 'paginationKalibrasi', 'kalibrasi');
         }
 
         // ==========================================

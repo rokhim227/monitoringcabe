@@ -176,7 +176,7 @@
             
             let cd = APP_DATA.cabeDatang.filter(filterMatch).reduce((sum, d) => sum + (parseFloat(d.qty)||0), 0);
             let bc = APP_DATA.belanjaCabe.filter(filterMatch).reduce((sum, d) => sum + (parseFloat(d.qty)||0), 0);
-            let totalIn = cd + bc;
+            let totalIn = cd; // Diubah: Hanya menghitung Cabe Datang (exclude Belanja Cabe)
 
             let susut = APP_DATA.cabeProcess.filter(filterMatch).reduce((sum, d) => sum + (parseFloat(d.susut)||0), 0);
 
@@ -375,7 +375,7 @@
                                             <div class="text-slate-500">Sisa Produksi:</div><div class="font-bold text-slate-800 text-right" id="az_prev_prod">0g</div>
                                             <div class="text-slate-500">Sisa Noodle:</div><div class="font-bold text-slate-800 text-right border-b border-indigo-200 pb-2" id="az_prev_noodle">0g</div>
                                             <div class="text-indigo-600 font-bold">Stock Akhir:</div><div class="font-bold text-indigo-600 text-right" id="az_prev_akhir">0g</div>
-                                            <div class="text-slate-500 mt-2">Masuk (Datang+Beli):</div><div class="font-bold text-slate-800 text-right mt-2" id="az_prev_in">0g</div>
+                                            <div class="text-slate-500 mt-2">Masuk (Cabe Datang):</div><div class="font-bold text-slate-800 text-right mt-2" id="az_prev_in">0g</div>
                                             <div class="text-slate-500">Total Susut:</div><div class="font-bold text-slate-800 text-right" id="az_prev_susut">0g</div>
                                             <div class="text-indigo-600 font-bold mt-2">Actual Usage:</div><div class="font-bold text-indigo-600 text-right mt-2" id="az_prev_actual">0g</div>
                                         </div>
@@ -1877,7 +1877,7 @@
                     <td class="px-4 py-3 text-right bg-indigo-50/30">${c.sisaNoodle.toLocaleString('id-ID')}</td>
                     <td class="px-4 py-3 text-right text-indigo-600 font-bold bg-indigo-50/50">${c.stockAkhir.toLocaleString('id-ID')}</td>
                     <td class="px-4 py-3 text-right font-medium">${d.usage.toLocaleString('id-ID')}</td>
-                    <td class="px-4 py-3 text-right font-medium"><span title="Awal + In - Akhir - Susut" class="cursor-help border-b border-dashed border-slate-400">${actualUsage.toLocaleString('id-ID')}</span></td>
+                    <td class="px-4 py-3 text-right font-medium"><span title="Awal + Datang - Akhir - Susut" class="cursor-help border-b border-dashed border-slate-400">${actualUsage.toLocaleString('id-ID')}</span></td>
                     <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded border ${selisihCls}">${selisihTxt}</span></td>
                     <td class="px-4 py-3 text-[10px] text-slate-500 whitespace-normal min-w-[150px]">${d.justify || '-'}</td>
                     <td class="px-4 py-3 text-center">${acts}</td>

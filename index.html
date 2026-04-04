@@ -629,8 +629,11 @@
                         </div>
                         <div class="p-6 md:p-8" id="formSisaUtuhBody" style="display: none;">
                             <form id="formSisaUtuh" onsubmit="submitSisaUtuh(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="su_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="su_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                     <div>
                                         <label class="block text-sm font-semibold text-slate-600 mb-2">Qty Sisa Utuh Storage (gr)</label>
                                         <div class="relative">
@@ -771,7 +774,8 @@
                         </div>
                         <div class="p-6 md:p-8" id="formSisaBody" style="display: none;">
                             <form id="formSisa" onsubmit="submitCabeSisa(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="sisa_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="sisa_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Crew Produksi</label><input type="text" id="sisa_crew" class="modern-input" placeholder="Masukkan nama crew" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="sisa_store" class="modern-input font-medium appearance-none" required></select></div>
@@ -1012,7 +1016,8 @@
                         </div>
                         <div class="p-6 md:p-8" id="formStockAkhirBody" style="display: none;">
                             <form id="formStockAkhirNoodle" onsubmit="submitStockAkhirNoodle(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="san_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="san_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="san_store" class="modern-input font-medium appearance-none" required></select></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Noodle</label><input type="text" id="san_crew_noodle" class="modern-input" placeholder="Masukkan nama crew noodle" required></div>
@@ -1360,6 +1365,9 @@
             document.getElementById('filterDateStockAkhir').value = today;
             document.getElementById('az_filter_date').value = today;
             document.getElementById('az_form_tgl').value = today;
+            document.getElementById('su_tgl').value = today;
+            document.getElementById('sisa_tgl').value = today;
+            document.getElementById('san_tgl').value = today;
             
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -2058,7 +2066,8 @@
                 
                 const newData = {
                     id: editingSanId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    tanggal: document.getElementById('san_tgl').value, 
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('san_petugas').value, 
                     store: document.getElementById('san_store').value,
                     crewNoodle: document.getElementById('san_crew_noodle').value,
@@ -2096,6 +2105,7 @@
             } else if(type === 'san') {
                 editingSanId = null; document.getElementById('formStockAkhirNoodle').reset();
                 document.getElementById('btnSubmitSan').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelSan').classList.add('hidden');
+                document.getElementById('san_tgl').value = new Date().toLocaleDateString('en-CA');
                 if(currentUser) {
                     document.getElementById('san_petugas').value = currentUser.name;
                     if(currentUser.role !== 'Admin') document.getElementById('san_store').value = currentUser.store;
@@ -2134,6 +2144,7 @@
                 const d = APP_DATA.stockAkhirNoodle.find(x => x.id === id);
                 if(d) {
                     editingSanId = id; 
+                    document.getElementById('san_tgl').value = getSafeDateString(d.tanggal);
                     document.getElementById('san_store').value = d.store; 
                     document.getElementById('san_crew_noodle').value = d.crewNoodle; 
                     document.getElementById('san_qty').value = d.qty; 
@@ -2435,7 +2446,8 @@
 
                 const newData = {
                     id: editingSisaId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    tanggal: document.getElementById('sisa_tgl').value, 
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('sisa_petugas').value, 
                     crew: document.getElementById('sisa_crew').value,
                     store: document.getElementById('sisa_store').value,
@@ -2604,6 +2616,7 @@
         function cancelEditSisa() {
             editingSisaId = null; document.getElementById('formSisa').reset();
             document.getElementById('btnSubmitSisa').innerHTML = '<i class="fas fa-save"></i> Simpan Sisa Cabe'; document.getElementById('btnCancelSisa').classList.add('hidden');
+            document.getElementById('sisa_tgl').value = new Date().toLocaleDateString('en-CA');
             if(currentUser) {
                 document.getElementById('sisa_petugas').value = currentUser.name;
                 if(currentUser.role !== 'Admin') document.getElementById('sisa_store').value = currentUser.store;
@@ -2657,6 +2670,7 @@
             const d = APP_DATA.cabeSisa.find(x => x.id === id);
             if(d) {
                 editingSisaId = id; 
+                document.getElementById('sisa_tgl').value = getSafeDateString(d.tanggal);
                 document.getElementById('sisa_store').value = d.store; 
                 document.getElementById('sisa_crew').value = d.crew; 
                 document.getElementById('sisa_qty').value = d.qty; 
@@ -2753,7 +2767,8 @@
 
                 const newData = {
                     id: editingSuId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    tanggal: document.getElementById('su_tgl').value, 
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('su_petugas').value, 
                     store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
                     qty: parseFloat(document.getElementById('su_qty').value) || 0,
@@ -2788,6 +2803,7 @@
             } else if(type === 'su') {
                 editingSuId = null; document.getElementById('formSisaUtuh').reset();
                 document.getElementById('btnSubmitSu').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelSu').classList.add('hidden');
+                document.getElementById('su_tgl').value = new Date().toLocaleDateString('en-CA');
                 if(currentUser) document.getElementById('su_petugas').value = currentUser.name;
             }
         }
@@ -2825,7 +2841,9 @@
             } else if(type === 'su') {
                 const d = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
                 if(d) {
-                    editingSuId = id; document.getElementById('su_qty').value = d.qty;
+                    editingSuId = id; 
+                    document.getElementById('su_tgl').value = getSafeDateString(d.tanggal);
+                    document.getElementById('su_qty').value = d.qty;
                     if(document.getElementById('formSisaUtuhBody').style.display === 'none') toggleElement('formSisaUtuhBody', 'iconFormSisaUtuh');
                     document.getElementById('btnSubmitSu').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelSu').classList.remove('hidden');
                     document.getElementById('su_foto').required = false; document.getElementById('formSisaUtuhContainer').scrollIntoView();

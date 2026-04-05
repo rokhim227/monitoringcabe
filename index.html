@@ -551,7 +551,8 @@
                         </div>
                         <div class="p-6 md:p-8" id="formCabeDatangBody" style="display: none;">
                             <form id="formCabeDatang" onsubmit="submitCabeDatang(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-end">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 items-end">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="cd_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="cd_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div>
                                         <label class="block text-sm font-semibold text-slate-600 mb-2">Qty Cabe Datang (gr)</label>
@@ -586,9 +587,10 @@
                         </div>
                         <div class="p-6 md:p-8" id="formBelanjaCabeBody" style="display: none;">
                             <form id="formBelanjaCabe" onsubmit="submitBelanjaCabe(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="bc_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="bc_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
-                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Produksi (Handover)</label><input type="text" id="bc_crew" class="modern-input" placeholder="Masukkan nama crew" required></div>
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Prod (Handover)</label><input type="text" id="bc_crew" class="modern-input" placeholder="Masukkan nama crew" required></div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                     <div>
@@ -815,7 +817,8 @@
                         </div>
                         <div class="p-6 md:p-8" id="formCabeBody">
                             <form id="formCabe" onsubmit="submitCabeProcess(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="cb_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="cb_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Crew Produksi</label><input type="text" id="cb_crew" class="modern-input" placeholder="Nama crew" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="cb_store" class="modern-input font-medium appearance-none" required></select></div>
@@ -976,11 +979,12 @@
                         </div>
                         <div class="p-6 md:p-8" id="formReceiveNoodleBody" style="display: none;">
                             <form id="formReceiveNoodle" onsubmit="submitReceiveNoodle(event)">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Tanggal</label><input type="date" id="rn_tgl" class="modern-input cursor-pointer" required></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Petugas</label><input type="text" id="rn_petugas" class="modern-input font-medium bg-slate-100" readonly></div>
                                     <div><label class="block text-sm font-semibold text-slate-600 mb-2">Asal Store</label><select id="rn_store" class="modern-input font-medium appearance-none" required></select></div>
-                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Produksi</label><input type="text" id="rn_crew_prod" class="modern-input" placeholder="Crew yang menyerahkan" required></div>
-                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Noodle</label><input type="text" id="rn_crew_noodle" class="modern-input" placeholder="Crew yang menerima" required></div>
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Prod</label><input type="text" id="rn_crew_prod" class="modern-input" placeholder="Yang menyerahkan" required></div>
+                                    <div><label class="block text-sm font-semibold text-slate-600 mb-2">Nama Crew Noodle</label><input type="text" id="rn_crew_noodle" class="modern-input" placeholder="Yang menerima" required></div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
                                     <div>
@@ -1337,7 +1341,6 @@
     <!-- SCRIPTS KESELURUHAN -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Modify ini di code.gs Anda nanti untuk mereturn stores juga
             callAPI('getPublicSettings').then(res => {
                 if(res.success && res.data) {
                     APP_DATA.settings.logoApp = res.data.logoApp || APP_DATA.settings.logoApp;
@@ -1365,9 +1368,15 @@
             document.getElementById('filterDateStockAkhir').value = today;
             document.getElementById('az_filter_date').value = today;
             document.getElementById('az_form_tgl').value = today;
+            
+            // Set input date defaults
             document.getElementById('su_tgl').value = today;
             document.getElementById('sisa_tgl').value = today;
             document.getElementById('san_tgl').value = today;
+            document.getElementById('cd_tgl').value = today;
+            document.getElementById('bc_tgl').value = today;
+            document.getElementById('cb_tgl').value = today;
+            document.getElementById('rn_tgl').value = today;
             
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -1663,7 +1672,7 @@
             const addFullRow = (label, val) => `<div class="col-span-1 md:col-span-2 bg-slate-50 p-3 rounded-lg border border-slate-100"><span class="block text-[10px] uppercase font-bold text-slate-400 mb-1">${label}</span><span class="font-semibold text-slate-700">${val || '-'}</span></div>`;
 
             if (type === 'analyze') {
-                data = APP_DATA.analyzeData.find(x => x.id === id);
+                data = APP_DATA.analyzeData.find(x => String(x.id) === String(id));
                 title = "Detail Analisa Cabe";
                 if(data) {
                     html += addRow('Tanggal', formatTgl(data.tanggal));
@@ -1673,7 +1682,7 @@
                     html += addFullRow('Keterangan Justify', data.justify);
                 }
             } else if (type === 'cd') {
-                data = APP_DATA.cabeDatang.find(x => x.id === id);
+                data = APP_DATA.cabeDatang.find(x => String(x.id) === String(id));
                 title = "Detail Cabe Datang";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1683,7 +1692,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'bc') {
-                data = APP_DATA.belanjaCabe.find(x => x.id === id);
+                data = APP_DATA.belanjaCabe.find(x => String(x.id) === String(id));
                 title = "Detail Belanja Cabe";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1695,7 +1704,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'su') {
-                data = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
+                data = APP_DATA.cabeUtuhSisa.find(x => String(x.id) === String(id));
                 title = "Detail Sisa Cabe Utuh (Storage)";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1705,7 +1714,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'cp') {
-                data = APP_DATA.cabeProcess.find(x => x.id === id);
+                data = APP_DATA.cabeProcess.find(x => String(x.id) === String(id));
                 title = "Detail Proses Steam Cabe";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1723,7 +1732,7 @@
                     html += `</div>`;
                 }
             } else if (type === 'cs') {
-                data = APP_DATA.cabeSisa.find(x => x.id === id);
+                data = APP_DATA.cabeSisa.find(x => String(x.id) === String(id));
                 title = "Detail Sisa Cabe Giling";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1733,7 +1742,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'rn') {
-                data = APP_DATA.receiveNoodle.find(x => x.id === id);
+                data = APP_DATA.receiveNoodle.find(x => String(x.id) === String(id));
                 title = "Detail Receive Noodle (Handover)";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1745,7 +1754,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'san') {
-                data = APP_DATA.stockAkhirNoodle.find(x => x.id === id);
+                data = APP_DATA.stockAkhirNoodle.find(x => String(x.id) === String(id));
                 title = "Detail Stock Akhir Noodle (Sisa Level)";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1756,7 +1765,7 @@
                     if(data.foto) html += `<div class="col-span-1 md:col-span-2 mt-2"><p class="text-[10px] uppercase font-bold text-slate-400 mb-2">Foto Dokumentasi</p><img src="${data.foto}" onclick="openImgPreview('${data.foto}')" class="w-40 h-40 object-cover rounded-xl border border-slate-200 cursor-pointer hover:shadow-md transition"></div>`;
                 }
             } else if (type === 'kal') {
-                data = APP_DATA.kalibrasi.find(x => x.id === id);
+                data = APP_DATA.kalibrasi.find(x => String(x.id) === String(id));
                 title = "Detail Kalibrasi Alat";
                 if(data) {
                     html += addRow('Tanggal & Jam', formatTgl(data.tanggal) + ' ' + (data.jam ? String(data.jam).substring(0, 5) : ''));
@@ -1862,7 +1871,7 @@
             
             try {
                 const newData = {
-                    id: editingAzId || Date.now(), 
+                    id: editingAzId ? String(editingAzId) : String(Date.now()), 
                     tanggal: document.getElementById('az_form_tgl').value,
                     store: document.getElementById('az_form_store').value,
                     stockAwal: parseFloat(document.getElementById('az_stock_awal').value) || 0,
@@ -1904,7 +1913,7 @@
         }
 
         function editAnalyzeData(id) {
-            const d = APP_DATA.analyzeData.find(x => x.id === id);
+            const d = APP_DATA.analyzeData.find(x => String(x.id) === String(id));
             if(d) {
                 editingAzId = id; 
                 document.getElementById('az_form_tgl').value = getSafeDateString(d.tanggal); 
@@ -1974,8 +1983,8 @@
             const paginatedDataAz = dataAz.slice(startIdx, startIdx + limit);
 
             tbodyAz.innerHTML = paginatedDataAz.map(d => {
-                let acts = `<button onclick="viewDetail('analyze', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                if(isAdmin) acts += `<button onclick="editAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData(${d.id})" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                let acts = `<button onclick="viewDetail('analyze', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                if(isAdmin) acts += `<button onclick="editAnalyzeData('${d.id}')" class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteAnalyzeData('${d.id}')" class="w-7 h-7 rounded bg-rose-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                 let safeDate = getSafeDateString(d.tanggal);
                 let displayDate = formatTgl(d.tanggal);
@@ -2024,8 +2033,9 @@
                 }
 
                 const newData = {
-                    id: editingRnId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    id: editingRnId ? String(editingRnId) : String(Date.now()), 
+                    tanggal: document.getElementById('rn_tgl').value,
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('rn_petugas').value, 
                     store: document.getElementById('rn_store').value,
                     crewProd: document.getElementById('rn_crew_prod').value,
@@ -2035,8 +2045,8 @@
                 };
 
                 if (editingRnId) {
-                    const idx = APP_DATA.receiveNoodle.findIndex(x => x.id === editingRnId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.receiveNoodle[idx].foto;
+                    const idx = APP_DATA.receiveNoodle.findIndex(x => String(x.id) === String(editingRnId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.receiveNoodle[idx].foto || '';
                 }
 
                 const res = await callAPI('saveReceiveNoodle', newData);
@@ -2065,7 +2075,7 @@
                 }
                 
                 const newData = {
-                    id: editingSanId || Date.now(), 
+                    id: editingSanId ? String(editingSanId) : String(Date.now()), 
                     tanggal: document.getElementById('san_tgl').value, 
                     jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('san_petugas').value, 
@@ -2076,8 +2086,8 @@
                 };
 
                 if (editingSanId) {
-                    const idx = APP_DATA.stockAkhirNoodle.findIndex(x => x.id === editingSanId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.stockAkhirNoodle[idx].foto;
+                    const idx = APP_DATA.stockAkhirNoodle.findIndex(x => String(x.id) === String(editingSanId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.stockAkhirNoodle[idx].foto || '';
                 }
 
                 const res = await callAPI('saveStockAkhirNoodle', newData);
@@ -2098,6 +2108,7 @@
             if(type === 'rn') {
                 editingRnId = null; document.getElementById('formReceiveNoodle').reset();
                 document.getElementById('btnSubmitRn').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelRn').classList.add('hidden');
+                document.getElementById('rn_tgl').value = new Date().toLocaleDateString('en-CA');
                 if(currentUser) {
                     document.getElementById('rn_petugas').value = currentUser.name;
                     if(currentUser.role !== 'Admin') document.getElementById('rn_store').value = currentUser.store;
@@ -2128,9 +2139,10 @@
 
         function editNoodleData(category, id) {
             if(category === 'rn') {
-                const d = APP_DATA.receiveNoodle.find(x => x.id === id);
+                const d = APP_DATA.receiveNoodle.find(x => String(x.id) === String(id));
                 if(d) {
                     editingRnId = id; 
+                    document.getElementById('rn_tgl').value = getSafeDateString(d.tanggal);
                     document.getElementById('rn_store').value = d.store; 
                     document.getElementById('rn_crew_prod').value = d.crewProd; 
                     document.getElementById('rn_crew_noodle').value = d.crewNoodle; 
@@ -2141,7 +2153,7 @@
                     document.getElementById('rn_foto').required = false; document.getElementById('formReceiveNoodleContainer').scrollIntoView();
                 }
             } else if(category === 'san') {
-                const d = APP_DATA.stockAkhirNoodle.find(x => x.id === id);
+                const d = APP_DATA.stockAkhirNoodle.find(x => String(x.id) === String(id));
                 if(d) {
                     editingSanId = id; 
                     document.getElementById('san_tgl').value = getSafeDateString(d.tanggal);
@@ -2199,8 +2211,8 @@
                 tbodySan.innerHTML = paginatedSan.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
-                    let acts = `<button onclick="viewDetail('san', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('san', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editNoodleData('san', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('san', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -2251,8 +2263,8 @@
                 tbodyRn.innerHTML = paginatedRn.map(d => {
                     let imgF = d.foto ? `<i class="fas fa-image text-indigo-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
 
-                    let acts = `<button onclick="viewDetail('rn', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('rn', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editNoodleData('rn', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteNoodleData('rn', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -2405,8 +2417,9 @@
                 let a = parseFloat(document.getElementById('cb_after').value) || 0;
 
                 const newData = {
-                    id: editingId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    id: editingId ? String(editingId) : String(Date.now()), 
+                    tanggal: document.getElementById('cb_tgl').value,
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('cb_petugas').value, 
                     crew: document.getElementById('cb_crew').value,
                     store: document.getElementById('cb_store').value,
@@ -2417,10 +2430,10 @@
                 };
 
                 if (editingId) {
-                    const idx = APP_DATA.cabeProcess.findIndex(x => x.id === editingId);
+                    const idx = APP_DATA.cabeProcess.findIndex(x => String(x.id) === String(editingId));
                     if(idx !== -1) {
-                        if(!fotoBefore) newData.fotoBefore = APP_DATA.cabeProcess[idx].fotoBefore;
-                        if(!fotoAfter) newData.fotoAfter = APP_DATA.cabeProcess[idx].fotoAfter;
+                        if(!fotoBefore) newData.fotoBefore = APP_DATA.cabeProcess[idx].fotoBefore || '';
+                        if(!fotoAfter) newData.fotoAfter = APP_DATA.cabeProcess[idx].fotoAfter || '';
                     }
                 }
 
@@ -2445,7 +2458,7 @@
                 if(document.getElementById('sisa_foto').files.length > 0) foto = await compressImage(document.getElementById('sisa_foto').files[0]);
 
                 const newData = {
-                    id: editingSisaId || Date.now(), 
+                    id: editingSisaId ? String(editingSisaId) : String(Date.now()), 
                     tanggal: document.getElementById('sisa_tgl').value, 
                     jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('sisa_petugas').value, 
@@ -2456,8 +2469,8 @@
                 };
 
                 if (editingSisaId) {
-                    const idx = APP_DATA.cabeSisa.findIndex(x => x.id === editingSisaId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeSisa[idx].foto;
+                    const idx = APP_DATA.cabeSisa.findIndex(x => String(x.id) === String(editingSisaId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeSisa[idx].foto || '';
                 }
 
                 const res = await callAPI('saveCabeSisa', newData);
@@ -2508,8 +2521,8 @@
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat proses</td></tr>`; 
             } else {
                 tbody.innerHTML = paginatedProcess.map(d => {
-                    let acts = `<button onclick="viewDetail('cp', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('cp', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editCabeProcess('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeProcess('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -2566,8 +2579,8 @@
                 tbody.innerHTML = paginatedSisa.map(d => {
                     let imgF = d.foto ? `<i class="fas fa-image text-orange-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
-                    let acts = `<button onclick="viewDetail('cs', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('cs', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editCabeSisa('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteCabeSisa('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -2605,6 +2618,7 @@
         function cancelEdit() {
             editingId = null; document.getElementById('formCabe').reset();
             document.getElementById('btnSubmitForm').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan Data'; document.getElementById('btnCancelEdit').classList.add('hidden');
+            document.getElementById('cb_tgl').value = new Date().toLocaleDateString('en-CA');
             if(currentUser) {
                 document.getElementById('cb_petugas').value = currentUser.name;
                 if(currentUser.role !== 'Admin') document.getElementById('cb_store').value = currentUser.store;
@@ -2648,9 +2662,10 @@
         }
 
         function editCabeProcess(id) {
-            const d = APP_DATA.cabeProcess.find(x => x.id === id);
+            const d = APP_DATA.cabeProcess.find(x => String(x.id) === String(id));
             if(d) {
                 editingId = id; 
+                document.getElementById('cb_tgl').value = getSafeDateString(d.tanggal);
                 document.getElementById('cb_store').value = d.store; 
                 document.getElementById('cb_batch').value = d.batch; 
                 document.getElementById('cb_crew').value = d.crew; 
@@ -2667,7 +2682,7 @@
         }
 
         function editCabeSisa(id) {
-            const d = APP_DATA.cabeSisa.find(x => x.id === id);
+            const d = APP_DATA.cabeSisa.find(x => String(x.id) === String(id));
             if(d) {
                 editingSisaId = id; 
                 document.getElementById('sisa_tgl').value = getSafeDateString(d.tanggal);
@@ -2699,8 +2714,9 @@
                 if(document.getElementById('cd_foto').files.length > 0) foto = await compressImage(document.getElementById('cd_foto').files[0]);
 
                 const newData = {
-                    id: editingCdId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    id: editingCdId ? String(editingCdId) : String(Date.now()), 
+                    tanggal: document.getElementById('cd_tgl').value,
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('cd_petugas').value, 
                     store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
                     qty: parseFloat(document.getElementById('cd_qty').value) || 0,
@@ -2709,8 +2725,8 @@
                 if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
 
                 if (editingCdId) {
-                    const idx = APP_DATA.cabeDatang.findIndex(x => x.id === editingCdId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeDatang[idx].foto;
+                    const idx = APP_DATA.cabeDatang.findIndex(x => String(x.id) === String(editingCdId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeDatang[idx].foto || '';
                 }
 
                 const res = await callAPI('saveCabeDatang', newData);
@@ -2732,8 +2748,9 @@
                 if(document.getElementById('bc_foto').files.length > 0) foto = await compressImage(document.getElementById('bc_foto').files[0]);
 
                 const newData = {
-                    id: editingBcId || Date.now(), 
-                    tanggal: new Date().toLocaleDateString('en-CA'), jam: new Date().toTimeString().split(' ')[0].substring(0,5),
+                    id: editingBcId ? String(editingBcId) : String(Date.now()), 
+                    tanggal: document.getElementById('bc_tgl').value,
+                    jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('bc_petugas').value, 
                     crew: document.getElementById('bc_crew').value,
                     store: currentUser.store !== 'All' ? currentUser.store : document.getElementById('filterStore').value,
@@ -2743,8 +2760,8 @@
                 if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
 
                 if (editingBcId) {
-                    const idx = APP_DATA.belanjaCabe.findIndex(x => x.id === editingBcId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.belanjaCabe[idx].foto;
+                    const idx = APP_DATA.belanjaCabe.findIndex(x => String(x.id) === String(editingBcId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.belanjaCabe[idx].foto || '';
                 }
 
                 const res = await callAPI('saveBelanjaCabe', newData);
@@ -2766,7 +2783,7 @@
                 if(document.getElementById('su_foto').files.length > 0) foto = await compressImage(document.getElementById('su_foto').files[0]);
 
                 const newData = {
-                    id: editingSuId || Date.now(), 
+                    id: editingSuId ? String(editingSuId) : String(Date.now()), 
                     tanggal: document.getElementById('su_tgl').value, 
                     jam: new Date().toTimeString().split(' ')[0].substring(0,5),
                     petugas: document.getElementById('su_petugas').value, 
@@ -2777,8 +2794,8 @@
                 if(newData.store === 'All') newData.store = APP_DATA.stores.length > 0 ? APP_DATA.stores[0].name : 'Default Store';
 
                 if (editingSuId) {
-                    const idx = APP_DATA.cabeUtuhSisa.findIndex(x => x.id === editingSuId);
-                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeUtuhSisa[idx].foto;
+                    const idx = APP_DATA.cabeUtuhSisa.findIndex(x => String(x.id) === String(editingSuId));
+                    if(idx !== -1 && !foto) newData.foto = APP_DATA.cabeUtuhSisa[idx].foto || '';
                 }
 
                 const res = await callAPI('saveCabeUtuhSisa', newData);
@@ -2795,10 +2812,12 @@
             if(type === 'cd') {
                 editingCdId = null; document.getElementById('formCabeDatang').reset();
                 document.getElementById('btnSubmitCd').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelCd').classList.add('hidden');
+                document.getElementById('cd_tgl').value = new Date().toLocaleDateString('en-CA');
                 if(currentUser) document.getElementById('cd_petugas').value = currentUser.name;
             } else if(type === 'bc') {
                 editingBcId = null; document.getElementById('formBelanjaCabe').reset();
                 document.getElementById('btnSubmitBc').innerHTML = '<i class="fas fa-save"></i> Simpan Data'; document.getElementById('btnCancelBc').classList.add('hidden');
+                document.getElementById('bc_tgl').value = new Date().toLocaleDateString('en-CA');
                 if(currentUser) document.getElementById('bc_petugas').value = currentUser.name;
             } else if(type === 'su') {
                 editingSuId = null; document.getElementById('formSisaUtuh').reset();
@@ -2823,23 +2842,29 @@
 
         function editReceiveData(type, id) {
             if(type === 'cd') {
-                const d = APP_DATA.cabeDatang.find(x => x.id === id);
+                const d = APP_DATA.cabeDatang.find(x => String(x.id) === String(id));
                 if(d) {
-                    editingCdId = id; document.getElementById('cd_qty').value = d.qty;
+                    editingCdId = id; 
+                    document.getElementById('cd_tgl').value = getSafeDateString(d.tanggal);
+                    document.getElementById('cd_qty').value = d.qty;
                     if(document.getElementById('formCabeDatangBody').style.display === 'none') toggleElement('formCabeDatangBody', 'iconFormCabeDatang');
                     document.getElementById('btnSubmitCd').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelCd').classList.remove('hidden');
                     document.getElementById('cd_foto').required = false; document.getElementById('formCabeDatangContainer').scrollIntoView();
                 }
             } else if(type === 'bc') {
-                const d = APP_DATA.belanjaCabe.find(x => x.id === id);
+                const d = APP_DATA.belanjaCabe.find(x => String(x.id) === String(id));
                 if(d) {
-                    editingBcId = id; document.getElementById('bc_crew').value = d.crew; document.getElementById('bc_qty').value = d.qty; calcResepBelanja();
+                    editingBcId = id; 
+                    document.getElementById('bc_tgl').value = getSafeDateString(d.tanggal);
+                    document.getElementById('bc_crew').value = d.crew; 
+                    document.getElementById('bc_qty').value = d.qty; 
+                    calcResepBelanja();
                     if(document.getElementById('formBelanjaCabeBody').style.display === 'none') toggleElement('formBelanjaCabeBody', 'iconFormBelanjaCabe');
                     document.getElementById('btnSubmitBc').innerHTML = '<i class="fas fa-save"></i> Update'; document.getElementById('btnCancelBc').classList.remove('hidden');
                     document.getElementById('bc_foto').required = false; document.getElementById('formBelanjaCabeContainer').scrollIntoView();
                 }
             } else if(type === 'su') {
-                const d = APP_DATA.cabeUtuhSisa.find(x => x.id === id);
+                const d = APP_DATA.cabeUtuhSisa.find(x => String(x.id) === String(id));
                 if(d) {
                     editingSuId = id; 
                     document.getElementById('su_tgl').value = getSafeDateString(d.tanggal);
@@ -2906,8 +2931,8 @@
                 tbodyRec.innerHTML = paginatedRec.map(d => {
                     let imgF = d.foto ? `<i class="fas fa-image text-${d.color}-500 cursor-pointer hover:scale-110 transition text-lg" title="Lihat Foto" onclick="openImgPreview('${d.foto}')"></i>` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
-                    let acts = `<button onclick="viewDetail('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('${d.rType}', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('${d.rType}', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('${d.rType}', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -2951,8 +2976,8 @@
                 tbodySu.innerHTML = paginatedSu.map(d => {
                     let imgF = d.foto ? `<img src="${d.foto}" onclick="openImgPreview('${d.foto}')" class="w-10 h-10 object-cover rounded-lg border border-slate-200 cursor-pointer hover:shadow-md transition mx-auto" title="Lihat Foto">` : `<span class="text-slate-300"><i class="fas fa-image"></i></span>`;
                     
-                    let acts = `<button onclick="viewDetail('su', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', ${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('su', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editReceiveData('su', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteReceiveData('su', '${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -3069,7 +3094,7 @@
             });
 
             const newData = {
-                id: editingKalibrasiId || Date.now(), 
+                id: editingKalibrasiId ? String(editingKalibrasiId) : String(Date.now()), 
                 tanggal: tanggal, jam: jam,
                 petugas: document.getElementById('kal_petugas').value, 
                 crew: document.getElementById('kal_crew').value,
@@ -3121,7 +3146,7 @@
         }
 
         function editKalibrasi(id) {
-            const d = APP_DATA.kalibrasi.find(x => x.id === id);
+            const d = APP_DATA.kalibrasi.find(x => String(x.id) === String(id));
             if(d) {
                 editingKalibrasiId = id; 
                 let datetimeLocal = d.tanggal + 'T' + (d.jam || '00:00');
@@ -3185,8 +3210,8 @@
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Tidak ada riwayat kalibrasi</td></tr>`; 
             } else {
                 tbody.innerHTML = paginatedKal.map(d => {
-                    let acts = `<button onclick="viewDetail('kal', ${d.id})" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
-                    if(isAdmin) acts += `<button onclick="editKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi(${d.id})" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
+                    let acts = `<button onclick="viewDetail('kal', '${d.id}')" class="w-7 h-7 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 transition mx-0.5" title="View Detail"><i class="fas fa-eye"></i></button>`;
+                    if(isAdmin) acts += `<button onclick="editKalibrasi('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-amber-500 hover:bg-amber-100 transition mx-0.5" title="Edit"><i class="fas fa-edit"></i></button><button onclick="deleteKalibrasi('${d.id}')" class="w-7 h-7 rounded bg-slate-50 text-rose-500 hover:bg-rose-100 transition mx-0.5" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     let displayDate = formatTgl(d.tanggal);
                     let displayTime = String(d.jam || '').substring(0, 5);
@@ -3219,7 +3244,7 @@
             const btn = document.getElementById('btnSaveStore');
             const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
 
-            const newData = { id: editingStoreId || Date.now(), name: input };
+            const newData = { id: editingStoreId ? String(editingStoreId) : String(Date.now()), name: input };
 
             callAPI('saveStore', newData).then(res => {
                 btn.innerHTML = orig; btn.disabled = false;
@@ -3233,7 +3258,7 @@
         }
 
         function editStore(id) {
-            const store = APP_DATA.stores.find(x => x.id === id);
+            const store = APP_DATA.stores.find(x => String(x.id) === String(id));
             if(store) {
                 editingStoreId = id; document.getElementById('storeNameInput').value = store.name;
                 document.getElementById('btnSaveStore').innerHTML = '<i class="fas fa-save"></i>'; document.getElementById('btnCancelStore').classList.remove('hidden');
@@ -3263,7 +3288,7 @@
             storeSel.innerHTML = '<option value="All">All Store</option>' + APP_DATA.stores.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
             
             if(mode === 'edit' && id) {
-                editingUserId = id; const user = APP_DATA.users.find(x => x.id === id);
+                editingUserId = id; const user = APP_DATA.users.find(x => String(x.id) === String(id));
                 document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-edit text-primary"></i> Edit User';
                 document.getElementById('u_name').value = user.name; document.getElementById('u_role').value = user.role;
                 document.getElementById('u_store').value = user.store; document.getElementById('u_username').value = user.username;
@@ -3281,7 +3306,7 @@
             const btn = document.getElementById('btnSaveUserModal'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
             
             const newData = {
-                id: editingUserId || Date.now(), name: document.getElementById('u_name').value, role: document.getElementById('u_role').value,
+                id: editingUserId ? String(editingUserId) : String(Date.now()), name: document.getElementById('u_name').value, role: document.getElementById('u_role').value,
                 store: document.getElementById('u_store').value, username: document.getElementById('u_username').value, password: document.getElementById('u_password').value
             };
 
@@ -3362,8 +3387,8 @@
                 <div class="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
                     <div class="font-semibold text-slate-700 flex items-center gap-3"><i class="fas fa-store text-slate-400"></i> ${s.name}</div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="editStore(${s.id})" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
-                        <button type="button" onclick="deleteStore(${s.id})" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
+                        <button type="button" onclick="editStore('${s.id}')" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
+                        <button type="button" onclick="deleteStore('${s.id}')" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join('') || '<div class="text-center py-4 text-slate-400 text-sm">Belum ada store</div>';
@@ -3379,8 +3404,8 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="openUserModal('edit', ${u.id})" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
-                        <button type="button" onclick="deleteUser(${u.id})" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
+                        <button type="button" onclick="openUserModal('edit', '${u.id}')" class="text-amber-500 hover:bg-amber-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-edit"></i></button>
+                        <button type="button" onclick="deleteUser('${u.id}')" class="text-rose-500 hover:bg-rose-50 w-8 h-8 rounded-lg flex items-center justify-center transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join('') || '<div class="text-center py-4 text-slate-400 text-sm">Belum ada user</div>';

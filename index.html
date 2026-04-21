@@ -38,6 +38,7 @@
             }
         }
     </script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
@@ -84,7 +85,6 @@
 </head>
 <body class="text-slate-700 antialiased overflow-x-hidden">
 
-    <!-- APP STATE & DATA -->
     <script>
         // ==========================================
         // KONFIGURASI API BACKEND (PASTE URL DI SINI)
@@ -178,13 +178,28 @@
             }
         }
 
-        async function callAPI(action, payload = null) {
+        async function callAPI(action, payload = null, timeoutMs = 20000) { // Default timeout 20 detik
             try {
                 if (SCRIPT_URL === 'URL_DEPLOY_APPS_SCRIPT_ANDA_DISINI') throw new Error("Tolong ganti SCRIPT_URL dengan link Web App Apps Script!");
-                const response = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: action, payload: payload }) });
+                
+                // Implementasi Timeout untuk menghindari fetch yang stuck
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+                const response = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: action, payload: payload }),
+                    signal: controller.signal // Bind the signal
+                });
+                
+                clearTimeout(timeoutId); // Clear timeout jika response sukses sebelum batas waktu
                 return await response.json();
             } catch (error) {
                 console.error("API Error:", error);
+                if (error.name === 'AbortError') {
+                    return { success: false, message: "Koneksi lambat (Timeout). Silakan coba lagi." };
+                }
                 return { success: false, message: error.message || "Gagal terhubung ke server." };
             }
         }
@@ -1485,7 +1500,7 @@
         }
 
         function refreshData(silent = false) {
-            if(!silent) Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            if(!silent) Swal.fire({ title: 'Menyinkronkan Data...', text: 'Mohon tunggu sebentar', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
             callAPI('getAppData').then(res => {
                 let rData = res;
@@ -1502,9 +1517,12 @@
                     if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
                     if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
                     
-                    initAppUI(); 
-                    reloadActiveViews();
-                    if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
+                    // Gunakan SetTimeout agar tidak terjadi 'Freeze' pada browser ketika render ulang
+                    setTimeout(() => {
+                        initAppUI(); 
+                        reloadActiveViews();
+                        if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
+                    }, 300);
                 } else {
                     if(!silent) Swal.fire('Error', res.message || res.error || 'Gagal memuat data dari server.', 'error');
                 }
@@ -1550,31 +1568,57 @@
 
         function handleLogin(e) {
             e.preventDefault();
-            const u = document.getElementById('username').value; const p = document.getElementById('password').value; const rem = document.getElementById('rememberMe').checked;
+            const u = document.getElementById('username').value; 
+            const p = document.getElementById('password').value; 
+            const rem = document.getElementById('rememberMe').checked;
+            
             const btn = document.querySelector('#loginForm button[type="submit"]');
-            const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>'; btn.disabled = true;
+            const orig = btn.innerHTML; 
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memeriksa...'; 
+            btn.disabled = true;
 
-            callAPI('loginAndFetchData', { username: u, password: p }).then(res => {
+            // Memanggil SweetAlert untuk overlay informatif agar user tau proses sedang berjalan
+            Swal.fire({
+                title: 'Sedang Masuk...',
+                html: 'Menghubungkan ke server dan mengunduh data.<br><b>Ini mungkin memakan waktu beberapa detik...</b>',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Set timeout 30 detik spesifik untuk login karena payload yang ditarik sangat besar
+            callAPI('loginAndFetchData', { username: u, password: p }, 30000).then(res => {
                 btn.innerHTML = orig; btn.disabled = false;
+                
                 if(res.success) { 
-                    APP_DATA = res.data; 
-                    if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
-                    if(!APP_DATA.cabeDatang) APP_DATA.cabeDatang = [];
-                    if(!APP_DATA.belanjaCabe) APP_DATA.belanjaCabe = [];
-                    if(!APP_DATA.cabeUtuhSisa) APP_DATA.cabeUtuhSisa = [];
-                    if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
-                    if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
-                    if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
-                    if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
+                    Swal.update({ title: 'Berhasil!', html: 'Mempersiapkan Dashboard Anda...', icon: 'success' });
                     
-                    initAppUI(); processLoginSuccess(res.user, u, rem); 
+                    // Jeda agar browser tidak "freeze" seketika saat merender chart dan table di background
+                    setTimeout(() => {
+                        APP_DATA = res.data; 
+                        if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
+                        if(!APP_DATA.cabeDatang) APP_DATA.cabeDatang = [];
+                        if(!APP_DATA.belanjaCabe) APP_DATA.belanjaCabe = [];
+                        if(!APP_DATA.cabeUtuhSisa) APP_DATA.cabeUtuhSisa = [];
+                        if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
+                        if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
+                        if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
+                        if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
+                        
+                        initAppUI(); 
+                        processLoginSuccess(res.user, u, rem); 
+                        Swal.close();
+                    }, 500);
+
                 } else { 
+                    Swal.close();
                     document.getElementById('authError').innerText = res.message || 'Username atau password salah!'; 
                     document.getElementById('authError').classList.remove('hidden'); 
                 }
             }).catch(err => {
                 btn.innerHTML = orig; btn.disabled = false;
-                document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi!'; 
+                Swal.close();
+                document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi atau server lambat!'; 
                 document.getElementById('authError').classList.remove('hidden'); 
             });
         }
@@ -3062,7 +3106,6 @@
 
             const tglVal = document.getElementById('kal_tgl').value; 
             const dateObj = new Date(tglVal);
-            // Pakai toLocaleDateString lokal agar tidak bergeser harinya
             const tanggal = dateObj.toLocaleDateString('en-CA');
             const jam = dateObj.toTimeString().split(' ')[0].substring(0,5);
 

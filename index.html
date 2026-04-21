@@ -85,21 +85,6 @@
 </head>
 <body class="text-slate-700 antialiased overflow-x-hidden">
 
-    <!-- Fullscreen Animated Loader -->
-    <div id="fullscreenLoader" class="fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center hidden transition-opacity duration-300 opacity-0">
-        <div class="relative w-20 h-20 mb-6">
-            <div class="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-            <div class="absolute inset-0 flex items-center justify-center text-primary text-xl shadow-glow rounded-full"><i class="fas fa-cloud-download-alt"></i></div>
-        </div>
-        <h2 class="text-xl font-bold text-white mb-2 tracking-wide" id="loaderTitle">Memproses Autentikasi</h2>
-        <p class="text-slate-400 font-medium mb-6 text-sm animate-pulse" id="loaderSubtitle">Menghubungkan ke server utama...</p>
-        <div class="w-64 bg-slate-800 rounded-full h-1.5 overflow-hidden shadow-inner">
-            <div id="loaderProgress" class="bg-primary h-full rounded-full w-0 transition-all duration-500 ease-out"></div>
-        </div>
-    </div>
-
-    <!-- APP STATE & DATA -->
     <script>
         // ==========================================
         // KONFIGURASI API BACKEND (PASTE URL DI SINI)
@@ -193,63 +178,11 @@
             }
         }
 
-        let loaderInterval;
-        function showLoader(title) {
-            const loader = document.getElementById('fullscreenLoader');
-            document.getElementById('loaderTitle').innerText = title;
-            document.getElementById('loaderSubtitle').innerText = "Menghubungkan ke database...";
-            document.getElementById('loaderProgress').style.width = "0%";
-            loader.classList.remove('hidden');
-            
-            // Trigger reflow to ensure transition animation kicks in
-            void loader.offsetWidth;
-            loader.classList.remove('opacity-0');
-            loader.classList.add('opacity-100');
-
-            let progress = 5;
-            document.getElementById('loaderProgress').style.width = progress + "%";
-            
-            const messages = [
-                "Mengunduh muatan data...",
-                "Memverifikasi akses pengguna...",
-                "Membaca riwayat sistem...",
-                "Menghitung kalkulasi stok...",
-                "Menyiapkan antarmuka aplikasi...",
-                "Sedikit lagi..."
-            ];
-            let msgIdx = 0;
-
-            // Pseudo-progress bar
-            loaderInterval = setInterval(() => {
-                progress += Math.random() * 8;
-                if(progress > 92) progress = 92; // Tahan di 92% hingga server membalas dengan success
-                document.getElementById('loaderProgress').style.width = progress + "%";
-
-                if (Math.random() > 0.6 && msgIdx < messages.length) {
-                    document.getElementById('loaderSubtitle').innerText = messages[msgIdx];
-                    msgIdx++;
-                }
-            }, 1200); 
-        }
-
-        function hideLoader(successMessage) {
-            clearInterval(loaderInterval);
-            document.getElementById('loaderProgress').style.width = "100%";
-            document.getElementById('loaderSubtitle').innerText = successMessage || "Terselesaikan!";
-            
-            setTimeout(() => {
-                const loader = document.getElementById('fullscreenLoader');
-                loader.classList.remove('opacity-100');
-                loader.classList.add('opacity-0');
-                setTimeout(() => loader.classList.add('hidden'), 350);
-            }, 500);
-        }
-
-        async function callAPI(action, payload = null, timeoutMs = 45000) { // Menambah default timeout 45 detik untuk muatan data raksasa
+        async function callAPI(action, payload = null, timeoutMs = 20000) { // Default timeout 20 detik
             try {
                 if (SCRIPT_URL === 'URL_DEPLOY_APPS_SCRIPT_ANDA_DISINI') throw new Error("Tolong ganti SCRIPT_URL dengan link Web App Apps Script!");
                 
-                // Mencegah sistem request menggantung selamanya (Stuck Timeout safety)
+                // Implementasi Timeout untuk menghindari fetch yang stuck
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -257,17 +190,17 @@
                     method: 'POST', 
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
                     body: JSON.stringify({ action: action, payload: payload }),
-                    signal: controller.signal
+                    signal: controller.signal // Bind the signal
                 });
                 
-                clearTimeout(timeoutId);
+                clearTimeout(timeoutId); // Clear timeout jika response sukses sebelum batas waktu
                 return await response.json();
             } catch (error) {
                 console.error("API Error:", error);
                 if (error.name === 'AbortError') {
-                    return { success: false, message: "Koneksi jaringan terlalu lambat (Timeout). Silakan periksa internet Anda." };
+                    return { success: false, message: "Koneksi lambat (Timeout). Silakan coba lagi." };
                 }
-                return { success: false, message: error.message || "Gagal terhubung ke server utama." };
+                return { success: false, message: error.message || "Gagal terhubung ke server." };
             }
         }
 
@@ -1567,51 +1500,34 @@
         }
 
         function refreshData(silent = false) {
-            if(!silent) showLoader('Menyinkronkan Data Terkini');
+            if(!silent) Swal.fire({ title: 'Menyinkronkan Data...', text: 'Mohon tunggu sebentar', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
             callAPI('getAppData').then(res => {
                 let rData = res;
                 if(res.success && res.data) rData = res.data; 
                 
                 if (rData && rData.users) {
-                    if(!silent) {
-                        document.getElementById('loaderSubtitle').innerText = "Memperbarui tampilan...";
-                        document.getElementById('loaderProgress').style.width = "95%";
-                    }
+                    APP_DATA = rData; 
+                    if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
+                    if(!APP_DATA.cabeDatang) APP_DATA.cabeDatang = [];
+                    if(!APP_DATA.belanjaCabe) APP_DATA.belanjaCabe = [];
+                    if(!APP_DATA.cabeUtuhSisa) APP_DATA.cabeUtuhSisa = [];
+                    if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
+                    if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
+                    if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
+                    if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
                     
-                    // Gunakan SetTimeout agar tidak terjadi 'Freeze' pada browser ketika browser mengikat memory & render ulang
+                    // Gunakan SetTimeout agar tidak terjadi 'Freeze' pada browser ketika render ulang
                     setTimeout(() => {
-                        APP_DATA = rData; 
-                        if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
-                        if(!APP_DATA.cabeDatang) APP_DATA.cabeDatang = [];
-                        if(!APP_DATA.belanjaCabe) APP_DATA.belanjaCabe = [];
-                        if(!APP_DATA.cabeUtuhSisa) APP_DATA.cabeUtuhSisa = [];
-                        if(!APP_DATA.receiveNoodle) APP_DATA.receiveNoodle = [];
-                        if(!APP_DATA.stockAkhirNoodle) APP_DATA.stockAkhirNoodle = [];
-                        if(!APP_DATA.analyzeData) APP_DATA.analyzeData = [];
-                        if(!APP_DATA.kalibrasi) APP_DATA.kalibrasi = [];
-                        
                         initAppUI(); 
                         reloadActiveViews();
-                        
-                        if(!silent) {
-                            hideLoader('Data Telah Mutakhir!');
-                            setTimeout(() => {
-                                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
-                            }, 500);
-                        }
-                    }, 150);
+                        if(!silent) Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data Mutakhir!', showConfirmButton: false, timer: 1500 });
+                    }, 300);
                 } else {
-                    if(!silent) {
-                        hideLoader('Gagal Sinkronisasi');
-                        setTimeout(() => Swal.fire('Error', res.message || res.error || 'Gagal memuat data dari server.', 'error'), 500);
-                    }
+                    if(!silent) Swal.fire('Error', res.message || res.error || 'Gagal memuat data dari server.', 'error');
                 }
             }).catch(err => {
-                if(!silent) {
-                    hideLoader('Koneksi Gagal');
-                    setTimeout(() => Swal.fire('Error', 'Masalah koneksi jaringan ke server API.', 'error'), 500);
-                }
+                if(!silent) Swal.fire('Error', 'Masalah koneksi jaringan ke server API.', 'error');
             });
         }
 
@@ -1661,15 +1577,23 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Memeriksa...'; 
             btn.disabled = true;
 
-            showLoader('Mengesahkan Pengguna');
+            // Memanggil SweetAlert untuk overlay informatif agar user tau proses sedang berjalan
+            Swal.fire({
+                title: 'Sedang Masuk...',
+                html: 'Menghubungkan ke server dan mengunduh data.<br><b>Ini mungkin memakan waktu beberapa detik...</b>',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
 
-            callAPI('loginAndFetchData', { username: u, password: p }).then(res => {
+            // Set timeout 30 detik spesifik untuk login karena payload yang ditarik sangat besar
+            callAPI('loginAndFetchData', { username: u, password: p }, 30000).then(res => {
+                btn.innerHTML = orig; btn.disabled = false;
+                
                 if(res.success) { 
-                    document.getElementById('loaderSubtitle').innerText = "Menerapkan kerangka data ke antarmuka...";
-                    document.getElementById('loaderProgress').style.width = "96%";
+                    Swal.update({ title: 'Berhasil!', html: 'Mempersiapkan Dashboard Anda...', icon: 'success' });
                     
-                    // Kita menunda sepersekian milidetik agar Animasi Loading berhasil merender angka 96%
-                    // dan Browser tidak freeze ketika melakukan assign Array raksasa ini ke memory.
+                    // Jeda agar browser tidak "freeze" seketika saat merender chart dan table di background
                     setTimeout(() => {
                         APP_DATA = res.data; 
                         if(!APP_DATA.cabeSisa) APP_DATA.cabeSisa = [];
@@ -1683,26 +1607,19 @@
                         
                         initAppUI(); 
                         processLoginSuccess(res.user, u, rem); 
-                        
-                        hideLoader('Otentikasi Sukses!');
-                        btn.innerHTML = orig; btn.disabled = false;
-                    }, 150);
+                        Swal.close();
+                    }, 500);
 
                 } else { 
-                    hideLoader('Gagal Masuk');
-                    setTimeout(() => {
-                        document.getElementById('authError').innerText = res.message || 'Username atau password salah!'; 
-                        document.getElementById('authError').classList.remove('hidden'); 
-                        btn.innerHTML = orig; btn.disabled = false;
-                    }, 500);
+                    Swal.close();
+                    document.getElementById('authError').innerText = res.message || 'Username atau password salah!'; 
+                    document.getElementById('authError').classList.remove('hidden'); 
                 }
             }).catch(err => {
-                hideLoader('Koneksi Terputus');
-                setTimeout(() => {
-                    document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi atau server Google lambat!'; 
-                    document.getElementById('authError').classList.remove('hidden'); 
-                    btn.innerHTML = orig; btn.disabled = false;
-                }, 500);
+                btn.innerHTML = orig; btn.disabled = false;
+                Swal.close();
+                document.getElementById('authError').innerText = 'Terjadi kesalahan koneksi atau server lambat!'; 
+                document.getElementById('authError').classList.remove('hidden'); 
             });
         }
         
